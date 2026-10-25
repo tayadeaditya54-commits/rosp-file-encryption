@@ -1,4 +1,5 @@
 # Open Source Secure File Encryption & Decryption System
+> **Status:** Resolves Issue #1 — Authenticated AES-256 Chunked File Encryption 
 
 **Course:** Recent Open Source Project Lab (ROSP)  
 **Academic Year:** 2026–2027  
