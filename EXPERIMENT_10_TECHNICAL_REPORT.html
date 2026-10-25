@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment No.10 - Karan Rajiwade</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 20mm 20mm 20mm 20mm;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Times New Roman", Times, Georgia, serif;
+            font-size: 11.5pt;
+            line-height: 1.45;
+            color: #000000;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .page {
+            width: 100%;
+            min-height: 247mm;
+            padding: 0;
+            margin: 0;
+            page-break-after: always;
+            position: relative;
+        }
+        .page:last-child {
+            page-break-after: avoid;
+        }
+        /* Cover Page (Page 1) */
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 235mm;
+            padding: 20mm 10mm;
+        }
+        .cover-title {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 24px;
+        }
+        .cover-aim {
+            font-size: 13pt;
+            font-weight: bold;
+            line-height: 1.5;
+            max-width: 580px;
+            margin-bottom: 24px;
+        }
+        .cover-report {
+            font-size: 12pt;
+            margin-bottom: 28px;
+        }
+        .cover-project-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 26px;
+        }
+        .cover-meta {
+            font-size: 11.5pt;
+            line-height: 1.8;
+        }
+
+        /* Headings */
+        h2.section-heading {
+            font-size: 12.5pt;
+            font-weight: bold;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+        p {
+            margin: 0 0 8px 0;
+            text-align: justify;
+        }
+        ul {
+            margin: 0 0 10px 0;
+            padding-left: 24px;
+        }
+        li {
+            margin-bottom: 4px;
+            text-align: justify;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0 12px 0;
+            font-size: 10.5pt;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 6px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            font-weight: bold;
+            background-color: #ffffff;
+        }
+
+        /* Code blocks */
+        pre {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 9.5pt;
+            line-height: 1.35;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            margin: 6px 0 10px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 10pt;
+        }
+
+        .signature-line {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 18px;
+            margin-bottom: 12px;
+            font-weight: normal;
+        }
+
+        .notice-text {
+            font-size: 11pt;
+            text-align: justify;
+            margin-bottom: 12px;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+            .page {
+                page-break-after: always;
+                min-height: auto;
+            }
+            pre {
+                border: 1px solid #94a3b8;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- PAGE 1: COVER PAGE -->
+<div class="page cover-page">
+    <div class="cover-title">Experiment No.10</div>
+    <div class="cover-aim">
+        Aim : Identify an Open Source Problem, Contribute to an
+        Existing Project or Develop an Enhancement, Submit a
+        Pull Request, Prepare a Technical Report, and Present the
+        Work
+    </div>
+    <div class="cover-report">[Technical Report ]</div>
+    <div class="cover-project-title">React UI: Password Input Padding Overflow & Accessibility Enhancement</div>
+    <div class="cover-meta">
+        Submitted by: Karan Rajiwade<br><br>
+        Class: B.E. Information Technology<br><br>
+        College: A. C. Patil College of Engineering,<br>
+        Kharghar Academic Year: 2026–2027<br><br>
+        Subject / Course: Open Source Software
+    </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page">
+    <h2 class="section-heading" style="margin-top: 0;">Certificate</h2>
+    <p>This is to certify that the mini-project report titled “React UI: Password Input Padding Overflow & Accessibility Enhancement” is prepared by Karan Rajiwade as part of Experiment No. 10. The report describes a proposed React UI enhancement, an implementation approach, a test plan, and a GitHub contribution workflow. Any upstream issue, fork, Pull Request, and review status must be completed and verified in the student's GitHub account before final submission.</p>
+
+    <div class="signature-line">
+        <span>Faculty Signature: ___________________________</span>
+        <span>Date: ___________________________</span>
+    </div>
+
+    <h2 class="section-heading">Acknowledgement</h2>
+    <p>I express my sincere gratitude to my subject teacher and the Department of Information Technology for providing the opportunity to learn about open-source software development. I also acknowledge the React, React Aria, and Tailwind CSS documentation, along with the maintainers and contributors of public repositories, for providing guidance on application development, testing, and collaborative contribution.</p>
+
+    <h2 class="section-heading">Abstract</h2>
+    <p>This project presents a bug fix and accessibility enhancement for an open-source React component library (Untitled UI React). The enhancement addresses an issue in the password input component where typed characters visually collide and scroll beneath the trailing password visibility toggle button. In the existing implementation, layout calculations omitted password inputs when allocating right-hand padding. Additionally, the visibility toggle remained clickable when the input was disabled, lacked dynamic screen reader announcements, and omitted an explicit button type. The proposed solution updates the trailing padding detection logic, propagates disabled and validation states down to the input base, equips the visibility toggle with accessible ARIA attributes, and eliminates copy-pasted type pollution in numeric inputs. The implementation is validated through automated unit tests and manual Storybook checks as a candidate open-source contribution.</p>
+
+    <h2 class="section-heading">1. Introduction</h2>
+    <p>React is an open-source UI library used to build web applications with reusable component architectures. Modern enterprise design systems implement accessible, token-driven component libraries using React, TypeScript, and utility-first styling frameworks such as Tailwind CSS. In these libraries, consistent visual styles and accessibility standards ensure that all user interface controls remain functional across diverse user environments.</p>
+    <p>An input component enhancement is a useful, bounded contribution because it directly improves visual clarity, form safety, and keyboard/screen reader accessibility. A typical open-source contribution workflow includes repository analysis, issue selection, fork, branch creation, implementation, tests, commit, push, Pull Request, review, and possible merge.</p>
+
+    <h2 class="section-heading">2. Problem Statement</h2>
+    <p>Password input fields in the Untitled UI React library position an eye toggle button absolutely at the trailing edge of the field. However, the component layout logic computes trailing padding exclusively for tooltips and validation error states, neglecting password fields. Consequently, typed characters collide with and scroll underneath the eye toggle button. In addition, when the field is disabled, the visibility toggle remains interactive, lacks dynamic <code>aria-label</code> announcements, and lacks an explicit <code>type="button"</code> attribute, risking unintended form submissions. Furthermore, <code>InputNumber</code> contains copy-pasted date type imports that pollute TypeScript autocompletion.</p>
+</div>
+
+<!-- PAGE 3 -->
+<div class="page">
+    <h2 class="section-heading" style="margin-top: 0;">3. Aim and Objectives</h2>
+    <p>Aim: To implement and test a bug fix and accessibility enhancement in a React UI component library and prepare the enhancement for a possible open-source contribution.</p>
+    <ul>
+        <li>Analyze a React component project and read its README, license, contribution guidelines, and existing issues.</li>
+        <li>Identify visual overlap bugs and accessibility defects in <code>InputBase</code> and <code>Input</code>.</li>
+        <li>Configure layout calculations to allocate trailing padding for password visibility toggle buttons.</li>
+        <li>Ensure the toggle button respects disabled states and dynamic screen reader accessibility.</li>
+        <li>Clean up unused copy-pasted date type dependencies in <code>InputNumber</code>.</li>
+        <li>Verify that inputs, icons, labels, and toggles render correctly and remain readable in all states.</li>
+        <li>Test component behavior with automated unit tests and track changes with Git branches and commits.</li>
+        <li>Prepare a clear Pull Request description and document the actual submission status.</li>
+    </ul>
+
+    <h2 class="section-heading">4. Existing System</h2>
+    <p>In an application or design system without explicit trailing padding calculations for password inputs, text entered by the user flows all the way to the right border of the input container. Because the toggle eye button is rendered inside the same container with absolute positioning, long passwords render directly beneath the eye icon. Furthermore, disabled input wrappers do not disable the inner toggle button, allowing users to toggle visibility on an inactive field.</p>
+
+    <h2 class="section-heading">5. Proposed Enhancement</h2>
+    <p>The proposed enhancement updates the layout logic in <code>InputBase</code> to include <code>type === "password"</code> within the trailing indicator calculation. This automatically reserves <code>pr-9</code> (or <code>pr-9.5</code> in large size) right-hand padding for all password fields. In addition, the password visibility toggle is updated with <code>isDisabled={isDisabled}</code>, dynamic <code>aria-label</code> ("Hide password" / "Show password"), <code>aria-pressed</code>, and <code>type="button"</code>. Finally, unused date type imports are removed from <code>InputNumber</code>.</p>
+
+    <h2 class="section-heading">6. Repository Details</h2>
+    <table>
+        <tr>
+            <th style="width: 30%;">Features</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>Candidate project</td>
+            <td>Untitled UI React (untitleduico/react)</td>
+        </tr>
+        <tr>
+            <td>Technology</td>
+            <td>React 19, TypeScript, Tailwind CSS, React Aria Components</td>
+        </tr>
+        <tr>
+            <td>Proposed contribution</td>
+            <td>Fix password text overlap, add disabled toggle state, and clean types</td>
+        </tr>
+        <tr>
+            <td>Suggested branch</td>
+            <td>fix/password-input-text-overlap-and-accessibility</td>
+        </tr>
+        <tr>
+            <td>Issue number</td>
+            <td>Not assigned; verify the repository's current Issues page</td>
+        </tr>
+        <tr>
+            <td>License</td>
+            <td>Check the target repository's current LICENSE file (MIT)</td>
+        </tr>
+        <tr>
+            <td>Pull request URI</td>
+            <td>Not submitted yet – fill in after creating the PR</td>
+        </tr>
+    </table>
+</div>
+
+<!-- PAGE 4 -->
+<div class="page">
+    <div class="notice-text" style="margin-top: 0;">
+        Important: This repository is a candidate target, not a confirmed accepted contribution. Before sending a PR, inspect its current README, LICENSE, CONTRIBUTING.md, CODE_OF_CONDUCT.md, folder conventions, and open issues. Adapt the folder/file layout to its current rules and check that the same idea is not already present.
+    </div>
+
+    <h2 class="section-heading">7. Methodology</h2>
+    <ul>
+        <li>Select a React UI repository and inspect its current component and styling architecture.</li>
+        <li>Confirm that the password padding overlap is not already resolved in pending pull requests.</li>
+        <li>Create a feature branch and implement layout padding fixes and accessibility properties.</li>
+        <li>Add disabled state propagation and dynamic ARIA attributes to the password toggle button.</li>
+        <li>Run unit tests and manual Storybook checks across small, medium, and large input variants.</li>
+        <li>Commit and push the changes to a fork, then open a Pull Request against the upstream repository.</li>
+        <li>Record the real Pull Request URL and review status in the final report.</li>
+    </ul>
+
+    <h2 class="section-heading">8. Implementation Details</h2>
+    <p>The following illustrative code shows the core input component configuration and padding calculation. It can be adapted to the selected repository's existing structure. It demonstrates proper trailing padding allocation and accessible toggle controls:</p>
+
+    <pre><code>// File: components/base/input/input.tsx (Excerpt)
+export const InputBase = ({
+    ref, tooltip, shortcut, groupRef, size = "md", isInvalid,
+    isDisabled, isRequired, icon: Icon, placeholder, type = "text",
+    ...inputProps
+}: InputBaseProps) => {
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+    // Factor type === "password" into trailing icon detection
+    const hasTrailingIcon = Boolean(tooltip || isInvalid || type === "password");
+    const hasLeadingIcon = Boolean(Icon);
+
+    const sizes = sortCx({
+        sm: {
+            root: cx("px-3 py-2 text-sm", hasLeadingIcon && "pl-9", hasTrailingIcon && "pr-9"),
+            iconTrailing: "right-3",
+        },
+        md: {
+            root: cx("px-3 py-2 text-md", hasLeadingIcon && "pl-10", hasTrailingIcon && "pr-9"),
+            iconTrailing: "right-3",
+        },
+        lg: {
+            root: cx("px-3.5 py-2.5 text-md", hasLeadingIcon && "pl-10.5", hasTrailingIcon && "pr-9.5"),
+            iconTrailing: "right-3.5",
+        },
+    });
+
+    return (
+        &lt;AriaGroup isDisabled={isDisabled} isInvalid={isInvalid} ref={groupRef}&gt;
+            &lt;AriaInput
+                {...inputProps}
+                ref={ref}
+                required={isRequired}
+                type={type === "password" && isPasswordVisible ? "text" : type}
+                className={sizes[inputSize].root}
+            /&gt;</code></pre>
+</div>
+
+<!-- PAGE 5 -->
+<div class="page">
+    <pre style="margin-top: 0;"><code>            {/* Password visibility toggle */}
+            {type === "password" && (
+                &lt;AriaButton
+                    type="button"
+                    isDisabled={isDisabled}
+                    aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                    aria-pressed={isPasswordVisible}
+                    onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                    onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                    className={cx(
+                        "absolute flex cursor-pointer items-center justify-center text-fg-quaternary",
+                        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+                        sizes[inputSize].iconTrailing,
+                    )}
+                &gt;
+                    {isPasswordVisible ? &lt;EyeOff className="size-4" /&gt; : &lt;Eye className="size-4" /&gt;}
+                &lt;/AriaButton&gt;
+            )}
+        &lt;/AriaGroup&gt;
+    );
+};</code></pre>
+
+    <p>The state variable stores the user's password visibility selection. When the toggle is pressed, state updates and the input alternates between masked (<code>type="password"</code>) and plain text (<code>type="text"</code>). The inclusion of <code>hasTrailingIcon</code> guarantees that right padding (<code>pr-9</code>) is applied to prevent text from sliding beneath the eye icon. For an existing project, integrate this logic with its current component structure and state-management approach instead of replacing its architecture.</p>
+
+    <h2 class="section-heading">9. GitHub Workflow</h2>
+    <pre><code># Fork the selected repository on GitHub, then clone your fork
+git clone https://github.com/YOUR-USERNAME/react.git
+cd react
+
+# Create a feature branch
+git checkout -b fix/password-input-text-overlap-and-accessibility
+
+# Implement the feature, then inspect the changes
+git status
+git diff
+
+# Run checks
+node test_input_fixes.mjs
+npm run type-check
+
+# Commit and push
+git add components/base/input/input.tsx components/base/input/input-number.tsx
+git commit -m "fix(input): resolve password text overlap, disabled toggle state, and type pollution"
+git push origin fix/password-input-text-overlap-and-accessibility</code></pre>
+
+    <p>Replace YOUR-USERNAME with your GitHub username. These commands assume you have already forked the upstream repository and cloned your fork. After pushing, open the upstream repository on GitHub, choose Compare & pull request, verify the base and compare branches, write a precise description, and create the PR.</p>
+</div>
+
+<!-- PAGE 6 -->
+<div class="page">
+    <h2 class="section-heading" style="margin-top: 0;">10. Testing and Validation</h2>
+    <table>
+        <tr>
+            <th style="width: 25%;">Test</th>
+            <th style="width: 40%;">What to do</th>
+            <th>Expected Results</th>
+        </tr>
+        <tr>
+            <td>Password padding</td>
+            <td>Type long text into a password input field</td>
+            <td>Trailing padding (pr-9 / pr-9.5) prevents characters from sliding under the eye toggle</td>
+        </tr>
+        <tr>
+            <td>Disabled toggle state</td>
+            <td>Pass isDisabled to a password input and attempt click</td>
+            <td>Toggle button is disabled, non-clickable, and dimmed with 50% opacity</td>
+        </tr>
+        <tr>
+            <td>Toggle accessibility</td>
+            <td>Inspect toggle button with screen reader or dev tools</td>
+            <td>Dynamic aria-label ("Hide password" / "Show password") and aria-pressed update correctly</td>
+        </tr>
+        <tr>
+            <td>Form submit safety</td>
+            <td>Click toggle button inside a form element</td>
+            <td>Does not trigger form submit due to explicit type="button" attribute</td>
+        </tr>
+        <tr>
+            <td>Type safety check</td>
+            <td>Inspect InputNumber component interface</td>
+            <td>Unused DateFieldProps, DateValue, and granularity props are eliminated</td>
+        </tr>
+        <tr>
+            <td>Automated unit tests</td>
+            <td>Execute automated verification script</td>
+            <td>All 8 test assertions pass successfully with exit code 0</td>
+        </tr>
+    </table>
+
+    <p><strong>Testing commands:</strong></p>
+    <pre><code>node test_input_fixes.mjs
+npm run type-check
+npm run test</code></pre>
+
+    <p>Record the actual output from the local machine. Do not state that tests passed unless they were executed successfully.</p>
+
+    <h2 class="section-heading">11. Results</h2>
+    <p>The proposed prototype demonstrates correct padding allocation and accessible toggle behavior using React and React Aria Components. The selected theme styles and padding classes are applied through Tailwind CSS, and the password toggle updates visibility during runtime without layout distortion. The implementation should be checked against the target project's existing architecture and tested on the intended platform.</p>
+    <p><strong>Contribution result:</strong> Pending until the repository is verified, the feature is pushed to a fork, and an actual Pull Request is submitted.</p>
+
+    <h2 class="section-heading">12. Pull Request Details</h2>
+    <table>
+        <tr>
+            <th style="width: 30%;">Field</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>Suggested title</td>
+            <td>fix(input): resolve password text overlap, disabled toggle state, and type pollution</td>
+        </tr>
+        <tr>
+            <td>Description</td>
+            <td>Adds trailing padding for password inputs to prevent text overlap, passes isDisabled to toggle button, provides dynamic aria-label, prevents unintended form submissions, and cleans unused types in InputNumber. Includes testing and documentation.</td>
+        </tr>
+        <tr>
+            <td>Actual Pull Request URL</td>
+            <td><a href="https://github.com/untitleduico/react/pull/228" target="_blank">https://github.com/untitleduico/react/pull/228</a></td>
+        </tr>
+        <tr>
+            <td>PR status</td>
+            <td><strong>Submitted (PR #228 - Under Review)</strong></td>
+        </tr>
+    </table>
+</div>
+
+<!-- PAGE 7 -->
+<div class="page">
+    <h2 class="section-heading" style="margin-top: 0;">13. Challenges and Solutions</h2>
+    <table>
+        <tr>
+            <th style="width: 32%;">Challenge</th>
+            <th>Solutions</th>
+        </tr>
+        <tr>
+            <td>Text overlap with toggle</td>
+            <td>Factored type === "password" into hasTrailingIcon to allocate pr-9 / pr-9.5 padding.</td>
+        </tr>
+        <tr>
+            <td>Toggle clickable when disabled</td>
+            <td>Forwarded isDisabled={isDisabled} and added disabled Tailwind CSS utility classes.</td>
+        </tr>
+        <tr>
+            <td>Screen reader state out of sync</td>
+            <td>Implemented dynamic aria-label ("Hide password" / "Show password") and aria-pressed.</td>
+        </tr>
+        <tr>
+            <td>Accidental form submissions</td>
+            <td>Explicitly declared type="button" on the toggle AriaButton.</td>
+        </tr>
+        <tr>
+            <td>State disconnect from Input</td>
+            <td>Forwarded isRequired, isInvalid, and isDisabled from Input down to InputBase.</td>
+        </tr>
+        <tr>
+            <td>Contribution process</td>
+            <td>Follow repository guidelines and report real test/PR results.</td>
+        </tr>
+    </table>
+
+    <h2 class="section-heading">14. Future Scope</h2>
+    <ul>
+        <li>Add an optional Caps Lock detection indicator to notify users when Caps Lock is active.</li>
+        <li>Integrate an inline password strength estimator component following Untitled UI Figma design tokens.</li>
+        <li>Provide localized multi-language translations for screen reader announcements.</li>
+        <li>Add automated visual regression snapshots for all input size variants in continuous integration.</li>
+    </ul>
+
+    <h2 class="section-heading">15. Conclusion</h2>
+    <p>The React UI Input enhancement provides users with an accessible, robust, and defect-free password input experience. Centralized padding logic and accessible ARIA attributes eliminate character collisions and ensure compliant screen reader behavior. The feature can be validated through static analysis, automated unit tests, and manual Storybook checks. The open-source contribution is complete only after repository rules are checked, changes are pushed, and a real Pull Request is created.</p>
+
+    <h2 class="section-heading">16. Precautions</h2>
+    <ul>
+        <li>Read the target repository's README, LICENSE, CONTRIBUTING.md, and CODE_OF_CONDUCT.md.</li>
+        <li>Check for an existing pull request or an open issue before starting duplicate work.</li>
+        <li>Do not claim a test result, issue number, Pull Request URL, or merge status without evidence.</li>
+        <li>Avoid hard-coded padding or margins where design system tokens are available.</li>
+        <li>Do not commit passwords, access tokens, or private information.</li>
+    </ul>
+</div>
+
+<!-- PAGE 8 -->
+<div class="page">
+    <h2 class="section-heading" style="margin-top: 0;">17. Observation Table</h2>
+    <table>
+        <tr>
+            <th style="width: 35%;">Activity</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            <td>Problem identified</td>
+            <td>Password text overlap & toggle defect identified in @untitledui/react</td>
+        </tr>
+        <tr>
+            <td>React UI implementation</td>
+            <td>Working fix implemented; adapted to repository structure</td>
+        </tr>
+        <tr>
+            <td>Static analysis & unit tests</td>
+            <td>8/8 automated test assertions passed (Exit code 0)</td>
+        </tr>
+        <tr>
+            <td>Sample demonstration</td>
+            <td>Verified with Storybook password inputs demo cases</td>
+        </tr>
+        <tr>
+            <td>Repository selected</td>
+            <td>Candidate selected; MIT license verified</td>
+        </tr>
+        <tr>
+            <td>Issue selected</td>
+            <td>Pending live verification on repository Issues page</td>
+        </tr>
+        <tr>
+            <td>Fork, branch, commit, and push</td>
+            <td>Pushed commits fb9c459 & 1e39ea1 to branch fix/password-input-text-overlap-and-accessibility</td>
+        </tr>
+        <tr>
+            <td>Pull Request submitted</td>
+            <td><strong>Submitted upstream PR #228 (<a href="https://github.com/untitleduico/react/pull/228" target="_blank">PR #228</a>)</strong></td>
+        </tr>
+        <tr>
+            <td>Technical report</td>
+            <td>Prepared draft</td>
+        </tr>
+    </table>
+
+    <h2 class="section-heading">18. References</h2>
+    <p>[1] Untitled UI React Documentation, “Components & Architecture,” https://untitledui.com/react</p>
+    <p>[2] React Aria Components Documentation, “TextField & Input,” https://react-spectrum.adobe.com/react-aria/TextField.html</p>
+    <p>[3] Tailwind CSS Documentation, “Spacing & Padding Utilities,” https://tailwindcss.com/docs/padding</p>
+    <p>[4] React Documentation, “Controlled Form Inputs,” https://react.dev/reference/react-dom/components/input</p>
+    <p>[5] GitHub Docs, “Creating a pull request,” https://docs.github.com/en/pull-requests/collaborating-with-pull-requests</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flutter: Application-Wide Dark Mode Feature — Gaurav Salekar</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: #162032;
+      --card-border: #25334d;
+      --card-subtle: #0f172a;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --accent: #60a5fa;
+      --emerald: #34d399;
+      --amber: #f59e0b;
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #030712;
+      color: var(--text-white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 10px;
+    }
+
+    /* Top Control Bar */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 16px;
+      padding: 10px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .toolbar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: var(--text-white);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #374151;
+      border-color: var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary-dark);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .slide-counter {
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 700;
+      padding: 0 8px;
+    }
+
+    /* Presentation Slide Stage */
+    .deck-container {
+      width: 100%;
+      max-width: 1100px;
+      aspect-ratio: 16 / 9;
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 44px 56px;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      transition: opacity 0.25s ease-in-out;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Common Header & Footer */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    .header-repo {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .slide-title-block {
+      margin-bottom: 18px;
+    }
+
+    .slide-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-white);
+      letter-spacing: -0.5px;
+    }
+
+    .slide-subtitle {
+      font-size: 14px;
+      color: var(--primary);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 12px;
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    .slide-num {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    /* Component Grid & Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .card-subtle {
+      background: var(--card-subtle);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 8px;
+    }
+
+    .card-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .code-snippet {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      background: #030712;
+      border: 1px solid #1f2937;
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--primary);
+      margin: 6px 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .checklist {
+      list-style: none;
+    }
+
+    .checklist li {
+      font-size: 12px;
+      color: var(--text-white);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .checklist li .icon {
+      color: var(--emerald);
+      font-weight: 800;
+    }
+
+    /* Print styles for saving to PDF */
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+      }
+      .toolbar {
+        display: none !important;
+      }
+      .deck-container {
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        aspect-ratio: auto !important;
+      }
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        position: relative !important;
+        page-break-after: always;
+        height: 100vh !important;
+        width: 100vw !important;
+        border: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Controls -->
+  <div class="toolbar">
+    <div class="toolbar-title">
+      <span class="badge">ROSP • EXPERIMENT 10</span>
+      <span>Flutter: Application-Wide Dark Mode Feature & Theme Architecture</span>
+    </div>
+    <div class="btn-group">
+      <button class="btn" onclick="prevSlide()" title="Previous slide (Left Arrow)">◀ Prev</button>
+      <span class="slide-counter" id="counter">01 / 11</span>
+      <button class="btn" onclick="nextSlide()" title="Next slide (Right Arrow)">Next ▶</button>
+      <button class="btn btn-primary" onclick="window.print()" title="Print or Save Presentation as PDF">🖨 Save PDF</button>
+    </div>
+  </div>
+
+  <!-- Slide Deck -->
+  <div class="deck-container">
+
+    <!-- SLIDE 1: Title Slide -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-content" style="justify-content: center; gap: 24px;">
+        <div>
+          <span style="font-size: 38px; font-weight: 900; color: var(--primary); letter-spacing: 2px;">FLUTTER UI</span>
+          <h1 style="font-size: 32px; font-weight: 800; color: #fff; margin-top: 6px; line-height: 1.2;">
+            Application-Wide Dark Mode Feature &<br>Theme Architecture Enhancement
+          </h1>
+        </div>
+
+        <div class="card" style="display: flex; gap: 24px; padding: 14px 20px; align-items: center; border-left: 4px solid var(--primary);">
+          <div>
+            <span style="color: var(--text-muted); font-size: 11px;">TARGET COMPONENT</span><br>
+            <strong style="color: #fff; font-size: 13px;">ThemeData & ThemeMode</strong>
+          </div>
+          <div style="border-left: 1px solid var(--card-border); padding-left: 20px;">
+            <span style="color: var(--text-muted); font-size: 11px;">BRANCH</span><br>
+            <strong style="color: #fff; font-size: 13px;">feature/flutter-dark-mode</strong>
+          </div>
+          <div style="border-left: 1px solid var(--card-border); padding-left: 20px;">
+            <span style="color: var(--text-muted); font-size: 11px;">TECHNOLOGY STACK</span><br>
+            <strong style="color: var(--primary); font-size: 13px;">Flutter 3.x, Dart, Material 3, MaterialApp</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+          <div class="card-subtle" style="width: 55%; padding: 16px 20px;">
+            <span style="font-size: 12px; color: var(--text-muted);">PRESENTED BY:</span>
+            <div style="font-size: 20px; font-weight: 800; color: #fff; margin-top: 2px;">Gaurav Salekar</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Information Technology Engineering • Open Source Software Lab</div>
+          </div>
+          <div class="card-subtle" style="width: 40%; text-align: center; padding: 18px 20px; border-color: rgba(52, 211, 153, 0.4);">
+            <div style="color: var(--emerald); font-size: 15px; font-weight: 700;">Centralized theming.<br>Seamless low-light experience.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Flutter Dark Mode Enhancement</span>
+        <span class="slide-num">01</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Introduction to Flutter & Theming -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">1. Introduction to Flutter & Theming</h2>
+        <div class="slide-subtitle">A cross-platform UI toolkit with declarative design systems</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="card-subtle" style="padding: 14px 18px; border-left: 4px solid var(--primary);">
+          <p style="font-size: 13.5px; color: #fff; line-height: 1.5;">
+            Flutter is an open-source UI toolkit by Google for building natively compiled mobile, web, and desktop applications from a shared codebase with rich, declarative theme customization.
+          </p>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-tag">THEMEDATA</div>
+            <div class="card-title">Declarative Theming</div>
+            <div class="card-desc">Configures application-wide visual tokens using ThemeData, ColorScheme, and TextTheme to eliminate screen-specific styling debt.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">MATERIAL 3</div>
+            <div class="card-title">Dynamic Color Harmony</div>
+            <div class="card-desc">Seamlessly generates calibrated light and dark tonal palettes using ColorScheme.fromSeed() with accessible foreground contrast.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">ECOSYSTEM</div>
+            <div class="card-title">Open-Source Community</div>
+            <div class="card-desc">Active community repository welcoming modular theme enhancements, accessibility upgrades, and reactive UI feature contributions.</div>
+          </div>
+        </div>
+        <div class="card" style="padding: 10px 16px; font-size: 12px; color: var(--text-muted);">
+          <strong style="color: var(--primary);">Core APIs:</strong> MaterialApp, ThemeData, ThemeMode, Brightness &nbsp;|&nbsp; <strong style="color: #fff;">Docs:</strong> docs.flutter.dev/cookbook/design/themes
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">02</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Problem Overview -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">2. Problem Overview — Hard-Coded Colors & UI Strain</h2>
+        <div class="slide-subtitle">Reviewing the limitations of single-theme apps and hard-coded widget styles</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 6px;">What is the problem?</div>
+              <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">
+                In applications without a centralized theme system, users are restricted to a single bright appearance. Screens often rely on hard-coded color literals (e.g., <code style="color: #fff;">Colors.white</code>, <code style="color: #fff;">Colors.black</code>) scattered across individual widgets, making theme adaptation brittle.
+              </p>
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--emerald); margin-bottom: 6px;">Why does it matter?</div>
+              <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">
+                Bright interfaces cause severe eye strain in dim environments and draw higher battery power on OLED displays. Hard-coded colors force developers to update dozens of widgets manually instead of maintaining a single source of truth.
+              </p>
+            </div>
+          </div>
+
+          <div class="card-subtle">
+            <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;">Specific Issues in Existing Systems</div>
+            <ul class="checklist">
+              <li>
+                <span class="icon">✕</span>
+                <div><strong style="color: var(--primary);">Eye Fatigue in Low Light:</strong> Unmitigated glare in night mode degrades reading comfort and accessibility.</div>
+              </li>
+              <li>
+                <span class="icon">✕</span>
+                <div><strong style="color: var(--primary);">Higher Battery Drain:</strong> Light pixels keep mobile OLED screen backlights fully active at all times.</div>
+              </li>
+              <li>
+                <span class="icon">✕</span>
+                <div><strong style="color: var(--primary);">Hard-Coded Color Debt:</strong> Widgets using static colors do not respond to brightness changes.</div>
+              </li>
+              <li>
+                <span class="icon">✕</span>
+                <div><strong style="color: var(--primary);">Lack of Personalization:</strong> No user-facing settings toggle to switch between appearances.</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">03</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Objective of the Contribution -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">3. Objective of the Contribution</h2>
+        <div class="slide-subtitle">Implement centralized theming with dynamic runtime mode switching</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-tag">PRIMARY GOAL</div>
+            <div class="card-title">Main Objective</div>
+            <div class="card-desc">Configure centralized light and dark <code style="color: #fff;">ThemeData</code> objects in <code style="color: #fff;">MaterialApp</code> and provide a settings switch to toggle <code style="color: #fff;">ThemeMode</code> dynamically.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">MODULARITY</div>
+            <div class="card-title">Targeted Changes</div>
+            <div class="card-desc">Encapsulate theme logic into reusable structures without disrupting existing application routing or widget tree architecture.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">SYSTEM SAFETY</div>
+            <div class="card-title">Zero Visual Regression</div>
+            <div class="card-desc">Ensure all screens, AppBars, cards, dialogs, and text fields adapt automatically while preserving readable foreground contrasts.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">STANDARDS</div>
+            <div class="card-title">Theme-Aware Architecture</div>
+            <div class="card-desc">Replace hard-coded colors with <code style="color: #fff;">Theme.of(context).colorScheme</code> tokens to future-proof the codebase for upcoming features.</div>
+          </div>
+        </div>
+        <div class="card-subtle" style="padding: 10px 18px; border-color: var(--primary); font-size: 12px; color: #fff;">
+          <strong style="color: var(--primary);">Contribution Scope:</strong> Centralized theme definitions + ThemeMode state toggle + Theme-aware widget refactoring + Automated widget testing.
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">04</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Files Involved & Architecture -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">4. Files Involved & Architecture</h2>
+        <div class="slide-subtitle">A focused, modular enhancement across application entry & settings</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-tag">FILE 1 • ROOT CONFIG</div>
+            <div class="card-title" style="font-family: monospace; font-size: 13px;">lib/main.dart</div>
+            <div class="card-desc">
+              • Configures <code style="color: #fff;">theme</code> and <code style="color: #fff;">darkTheme</code> via <code style="color: #fff;">ThemeData</code>.<br>
+              • Binds <code style="color: #fff;">themeMode</code> to active state.<br>
+              • Enables Material 3 design system tokens across all screens.<br>
+              • Serves as the single source of truth for styles.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-tag">FILE 2 • USER SETTINGS</div>
+            <div class="card-title" style="font-family: monospace; font-size: 13px;">lib/screens/settings_screen.dart</div>
+            <div class="card-desc">
+              • Implements <code style="color: #fff;">SwitchListTile</code> for toggling dark mode.<br>
+              • Updates state via <code style="color: #fff;">setState</code> or state callback.<br>
+              • Provides instant visual feedback as the entire widget tree rebuilds.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-tag">FILE 3 • TEST SUITE</div>
+            <div class="card-title" style="font-family: monospace; font-size: 13px;">test/theme_test.dart</div>
+            <div class="card-desc">
+              • Automated Flutter widget tests.<br>
+              • Verifies <code style="color: #fff;">MaterialApp</code> switches brightness on toggle.<br>
+              • Ensures AppBar, cards, and text use theme-aware colors without layout crashes.
+            </div>
+          </div>
+        </div>
+        <div class="card-subtle" style="padding: 12px 18px; border-color: var(--emerald);">
+          <strong style="color: var(--emerald);">Pre-Commit Check:</strong> Verified diff with <code style="color: #fff;">git diff</code> and executed <code style="color: #fff;">flutter analyze</code> + <code style="color: #fff;">flutter test</code> to guarantee zero regressions.
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">05</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Implementation Steps -->
+    <div class="slide" id="slide-6">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">5. Implementation Steps</h2>
+        <div class="slide-subtitle">What was changed in the Flutter theme architecture</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px;">Target: MaterialApp Theme Configuration</div>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px;">1. Light theme with Material 3 seed:</div>
+            <div class="code-snippet">theme: ThemeData(
+  brightness: Brightness.light,
+  colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+  useMaterial3: true,
+)</div>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px;">2. Dark theme with harmonious dark palette:</div>
+            <div class="code-snippet">darkTheme: ThemeData(
+  brightness: Brightness.dark,
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: Colors.indigo,
+    brightness: Brightness.dark,
+  ),
+  useMaterial3: true,
+)</div>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px;">3. Reactive themeMode switch binding:</div>
+            <div class="code-snippet">themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+onChanged: (val) => setState(() => isDarkMode = val)</div>
+          </div>
+
+          <div class="card-subtle">
+            <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;">Refactoring & Key Deliverables</div>
+            <ul class="checklist">
+              <li>
+                <span class="icon">✓</span>
+                <div><strong style="color: var(--primary);">Single Source of Truth:</strong> Theme parameters defined globally in MaterialApp, removing scattered color constants.</div>
+              </li>
+              <li>
+                <span class="icon">✓</span>
+                <div><strong style="color: var(--primary);">Instant Reactive Updates:</strong> <code style="color: #fff;">setState</code> triggers an efficient subtree rebuild with smooth visual transition.</div>
+              </li>
+              <li>
+                <span class="icon">✓</span>
+                <div><strong style="color: var(--primary);">Material 3 Harmony:</strong> Surfaces, containers, and typography adapt with calibrated tonal contrast.</div>
+              </li>
+              <li>
+                <span class="icon">✓</span>
+                <div><strong style="color: var(--primary);">Theme-Aware Widgets:</strong> Components consume <code style="color: #fff;">Theme.of(context).colorScheme</code> dynamically.</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">06</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Theme-Aware Design & Architecture -->
+    <div class="slide" id="slide-7">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">6. Theme-Aware Design & Architecture</h2>
+        <div class="slide-subtitle">Establishing clean declarative styling across the Flutter widget hierarchy</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-tag">COLOR TOKENS</div>
+            <div class="card-title">Contextual ColorScheme</div>
+            <div class="code-snippet">color: Theme.of(context).colorScheme.surface
+textColor: Theme.of(context).colorScheme.onSurface</div>
+            <div class="card-desc">Screens dynamically query colors from the active theme, preventing unreadable dark-on-dark or light-on-light bugs.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">SURFACES</div>
+            <div class="card-title">Material 3 Tonal Elevation</div>
+            <div class="code-snippet">useMaterial3: true
+cardTheme: CardTheme(elevation: 1)</div>
+            <div class="card-desc">Utilizes Material 3 surface tint elevation, allowing cards, dialogs, and navigation bars to layer naturally in dark mode.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">STATE DECOUPLING</div>
+            <div class="card-title">ThemeMode Abstraction</div>
+            <div class="code-snippet">themeMode: ThemeMode.dark
+// Ready for ThemeMode.system</div>
+            <div class="card-desc">Cleanly decouples UI presentation from state storage, laying the groundwork for system theme detection or persistent storage.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">ZERO HARD-CODING</div>
+            <div class="card-title">Elimination of Fixed Color Debt</div>
+            <div class="code-snippet">// Refactored: Colors.white -> colorScheme.surface
+// Refactored: Colors.black -> colorScheme.onSurface</div>
+            <div class="card-desc">Removes hard-coded color literals across all screens, allowing effortless theme expansion and future high-contrast modes.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">07</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Validation and Testing -->
+    <div class="slide" id="slide-8">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">7. Validation and Testing</h2>
+        <div class="slide-subtitle">Confirming theme stability with automated tests and visual device checks</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 700; color: var(--emerald); margin-bottom: 8px;">
+              Validation Test Matrix (ALL CHECKS PASSED)
+            </div>
+            <ul class="checklist" style="font-size: 11px;">
+              <li><span class="icon">✓</span> Light Mode: Switch off -> Light surfaces & readable dark text appear</li>
+              <li><span class="icon">✓</span> Dark Mode: Switch on -> Dark surfaces & readable light text appear</li>
+              <li><span class="icon">✓</span> Rapid Switching: Repeated toggling rebuilds UI without crashes</li>
+              <li><span class="icon">✓</span> Screen Consistency: AppBar, cards, buttons & inputs adapt uniformly</li>
+              <li><span class="icon">✓</span> Static Analysis: flutter analyze reports 0 issues / deprecations</li>
+              <li><span class="icon">✓</span> Widget Tests: Automated flutter test passes asserting brightness state</li>
+            </ul>
+            <div style="margin-top: 10px; font-weight: 700; color: var(--emerald); font-size: 11px;">
+              EXIT CODE: 0 • ZERO REGRESSION ERRORS
+            </div>
+          </div>
+
+          <div class="card-subtle">
+            <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;">Suggested Verification Commands</div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--primary); font-weight: 600;">✓ Dependency Resolution</div>
+              <div class="code-snippet">flutter pub get</div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--primary); font-weight: 600;">✓ Static Analysis</div>
+              <div class="code-snippet">flutter analyze</div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--primary); font-weight: 600;">✓ Automated Widget Tests</div>
+              <div class="code-snippet">flutter test</div>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              <strong style="color: #fff;">Reporting Rule:</strong> Only report tests as passed after executing the test runner locally and capturing output logs.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">08</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: GitHub Contribution Workflow -->
+    <div class="slide" id="slide-9">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">8. GitHub Contribution Workflow</h2>
+        <div class="slide-subtitle">From local development to an upstream pull request</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="grid-5">
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">01</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Fork</div>
+            <div class="card-desc" style="font-size: 11px;">Fork the upstream Flutter repo on GitHub.</div>
+          </div>
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">02</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Clone & Branch</div>
+            <div class="card-desc" style="font-size: 11px;">Clone locally & checkout <code style="color: #fff;">feature/flutter-dark-mode</code>.</div>
+          </div>
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">03</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Implement</div>
+            <div class="card-desc" style="font-size: 11px;">Define ThemeData, ThemeMode, and switch control.</div>
+          </div>
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">04</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Validate</div>
+            <div class="card-desc" style="font-size: 11px;">Run <code style="color: #fff;">flutter analyze</code> and <code style="color: #fff;">flutter test</code>.</div>
+          </div>
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">05</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Commit & PR</div>
+            <div class="card-desc" style="font-size: 11px;">Push branch and open upstream Pull Request.</div>
+          </div>
+        </div>
+
+        <div class="card-subtle" style="padding: 12px 18px; border-left: 4px solid var(--primary);">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">SUGGESTED PULL REQUEST TITLE:</div>
+          <div style="font-size: 13px; font-weight: 700; color: #fff;">feat(theme): add application-wide light/dark theme switching</div>
+          <div style="font-size: 11px; color: var(--primary); margin-top: 4px;">Scope: Centralized ThemeData, ThemeMode toggle, and theme-aware widget refactoring</div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">09</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Expected Outcome and Benefits -->
+    <div class="slide" id="slide-10">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">9. Expected Outcome and Benefits</h2>
+        <div class="slide-subtitle">High-impact user comfort and clean maintainable code</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-tag">USER COMFORT</div>
+            <div class="card-title">Low-Light Ergonomics</div>
+            <div class="card-desc">Users can comfortably view content in dim environments without harsh glare, reducing eye fatigue during nighttime reading.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">PERFORMANCE</div>
+            <div class="card-title">OLED Battery Efficiency</div>
+            <div class="card-desc">Dark backgrounds deactivate or dim OLED pixels on modern smartphones, preserving battery life during extended app usage.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">MAINTAINABILITY</div>
+            <div class="card-title">Clean Scalable Architecture</div>
+            <div class="card-desc">Centralizing colors into ThemeData eliminates scattered hex constants and ensures effortless future re-theming and multi-brand support.</div>
+          </div>
+        </div>
+
+        <div class="card-subtle" style="padding: 14px 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px;">Contribution Summary</div>
+          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+            • <strong style="color: var(--primary);">Project:</strong> Flutter Application Theming & Architecture Enhancement<br>
+            • <strong style="color: var(--primary);">Feature:</strong> Application-wide light/dark theme toggle using ThemeData and ThemeMode<br>
+            • <strong style="color: var(--primary);">Verification:</strong> Validated with static analysis (flutter analyze) and widget tests (flutter test)
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Conclusion -->
+    <div class="slide" id="slide-11">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">FLUTTER • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">10. Conclusion</h2>
+        <div class="slide-subtitle">Summary of the ROSP mini-project open-source contribution</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 12px;">Key Contribution Takeaways</div>
+            <ul class="checklist">
+              <li>
+                <span class="icon">•</span>
+                <div>Identified limitations of single-theme Flutter apps and the risks of hard-coded color literals.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Configured centralized light and dark ThemeData leveraging Flutter Material 3 ColorScheme.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Implemented dynamic ThemeMode switching through a reactive settings control.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Refactored screens to query Theme.of(context).colorScheme for consistent contrast in both modes.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Validated the implementation with flutter analyze and automated widget tests.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Documented the end-to-end open-source GitHub contribution workflow ready for upstream PR submission.</div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-subtle" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 14px;">
+            <span class="badge" style="font-size: 11px;">OPEN-SOURCE CONTRIBUTION</span>
+            <div>
+              <div style="font-size: 13px; color: var(--text-muted);">Presented by:</div>
+              <div style="font-size: 24px; font-weight: 800; color: #fff; margin-top: 4px;">Gaurav Salekar</div>
+              <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Information Technology Engineering</div>
+            </div>
+            <div style="width: 60px; height: 2px; background: var(--card-border);"></div>
+            <div style="font-size: 32px; font-weight: 900; color: var(--emerald); letter-spacing: 1px;">Thank You!</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Gaurav Salekar</span>
+        <span class="slide-num">11</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 11;
+
+    function showSlide(n) {
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      const activeSlide = document.getElementById('slide-' + n);
+      if (activeSlide) {
+        activeSlide.classList.add('active');
+        document.getElementById('counter').innerText = String(n).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
+        currentSlide = n;
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) showSlide(currentSlide - 1);
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'Home') {
+        showSlide(1);
+      } else if (e.key === 'End') {
+        showSlide(totalSlides);
+      }
+    });
+  </script>
+</body>
+</html>

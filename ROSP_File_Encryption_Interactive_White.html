@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROSP Lab — File Encryption & Decryption System (Aditya Tayade)</title>
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-slide: #ffffff;
+      --card-bg: #f8fafc;
+      --card-border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --primary-dark: #0369a1;
+      --emerald: #059669;
+      --emerald-light: #d1fae5;
+      --indigo: #4f46e5;
+      --indigo-light: #e0e7ff;
+      --amber: #d97706;
+      --amber-light: #fef3c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px 12px 32px 12px;
+      user-select: none;
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1150px;
+      margin-bottom: 14px;
+      padding: 10px 18px;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      color: #ffffff;
+    }
+
+    .slide-jumper {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .slide-jumper:focus {
+      border-color: var(--primary);
+    }
+
+    /* Live Progress Bar */
+    .progress-bar-container {
+      width: 100%;
+      max-width: 1150px;
+      height: 4px;
+      background: #e2e8f0;
+      border-radius: 2px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary) 0%, #38bdf8 100%);
+      width: 9.09%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Main Deck Stage */
+    .deck-viewport {
+      width: 100%;
+      max-width: 1150px;
+      aspect-ratio: 16 / 9;
+      background: var(--bg-slide);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* Fullscreen mode */
+    :fullscreen .deck-viewport, :-webkit-full-screen .deck-viewport {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      border-radius: 0;
+      border: none;
+      aspect-ratio: auto;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 38px 48px 30px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease;
+      background: #ffffff;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 10;
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+    }
+
+    .slide-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 4px;
+    }
+
+    .slide-title {
+      font-size: 23px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .slide-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    /* Slide Body */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 10px;
+      margin-top: 12px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .slide-num-badge {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 2px 10px;
+      border-radius: 6px;
+    }
+
+    /* Grids & Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 15px 18px;
+    }
+
+    .card-accent {
+      border-left: 4px solid var(--primary);
+    }
+
+    .card-success {
+      border-left: 4px solid var(--emerald);
+    }
+
+    .card-indigo {
+      border-left: 4px solid var(--indigo);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .step-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Pipeline tracker */
+    .pipeline-bar {
+      display: flex;
+      align-items: center;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 10px 14px;
+      gap: 8px;
+      overflow-x: auto;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .pipeline-step {
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .pipeline-step.active-step {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .pipeline-arrow {
+      color: #94a3b8;
+    }
+
+    /* Code Snippet */
+    .code-box {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      font-size: 11.5px;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+
+    .code-hl {
+      color: #38bdf8;
+      font-weight: 700;
+    }
+
+    /* Cover Slide */
+    .cover-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+    }
+
+    .cover-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 5px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--text-main);
+      letter-spacing: -0.8px;
+      line-height: 1.15;
+    }
+
+    .cover-subtitle {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .cover-meta {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      max-width: 900px;
+      justify-content: center;
+      margin-top: 6px;
+    }
+
+    .cover-meta-box {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    .cover-meta-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-meta-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 2px;
+    }
+
+    /* Print Setup: prints each slide on separate landscape page */
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+      }
+      .top-bar, .progress-bar-container {
+        display: none !important;
+      }
+      .deck-viewport {
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        aspect-ratio: auto !important;
+        height: auto !important;
+        display: block !important;
+      }
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+        page-break-after: always;
+        break-after: page;
+        height: 100vh !important;
+        width: 100vw !important;
+        border: none !important;
+        padding: 40px 60px 30px 60px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Toolbar -->
+  <div class="top-bar">
+    <div class="brand-title">
+      <span>🛡️ ROSP Oral Presentation</span>
+      <span class="badge-pill">A.Y. 2026–27</span>
+    </div>
+    <div class="controls-group">
+      <button class="btn" onclick="prevSlide()" title="Previous slide (Left Arrow)">◀ Prev</button>
+      <select class="slide-jumper" id="slideSelect" onchange="jumpToSlide(this.value)">
+        <option value="0">01 Cover Title</option>
+        <option value="1">02 Introduction to ROSP</option>
+        <option value="2">03 ROSP Learning Journey</option>
+        <option value="3">04 Experiments 1–4: Foundation</option>
+        <option value="4">05 Experiments 5–7: Contribution</option>
+        <option value="5">06 Experiments 8–9: Deployment</option>
+        <option value="6">07 Exp 10: Problem Statement</option>
+        <option value="7">08 Exp 10: File Encryption System</option>
+        <option value="8">09 Verification & Unit Testing</option>
+        <option value="9">10 GitHub Workflow & Evidence</option>
+        <option value="10">11 Assessment & Outcomes</option>
+      </select>
+      <button class="btn" onclick="nextSlide()" title="Next slide (Right Arrow)">Next ▶</button>
+      <button class="btn" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)">⛶ Fullscreen</button>
+      <button class="btn btn-primary" onclick="window.print()" title="Print or Export PDF (Ctrl+P)">🖨 Save PDF</button>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progressBar"></div>
+  </div>
+
+  <!-- Deck Viewport -->
+  <div class="deck-viewport" id="deckContainer">
+
+    <!-- SLIDE 1: Title Slide -->
+    <div class="slide active">
+      <div class="cover-content">
+        <div class="cover-badge">RECENT OPEN SOURCE PROJECT LAB (ROSP)</div>
+        <h1 class="cover-title">Recent Open Source Project Lab</h1>
+        <div class="cover-subtitle">Lab Work & Open Source Contribution: File Encryption & Decryption System</div>
+        
+        <div class="cover-meta">
+          <div class="cover-meta-box">
+            <div class="cover-meta-label">Presenter</div>
+            <div class="cover-meta-val">Aditya Tayade</div>
+          </div>
+          <div class="cover-meta-box">
+            <div class="cover-meta-label">Department / Class</div>
+            <div class="cover-meta-val">B.E. Information Technology</div>
+          </div>
+          <div class="cover-meta-box">
+            <div class="cover-meta-label">Institution</div>
+            <div class="cover-meta-val">A. C. Patil College of Engineering, Kharghar</div>
+          </div>
+          <div class="cover-meta-box">
+            <div class="cover-meta-label">Project Domain</div>
+            <div class="cover-meta-val">Cyber Security & Cryptography</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Department of Information Technology • A. C. Patil College of Engineering</span>
+        <span class="slide-num-badge">01</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Introduction to ROSP -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Overview & Objectives</div>
+          <h2 class="slide-title">1. Introduction to ROSP</h2>
+        </div>
+        <span class="slide-tag">Foundation</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent">
+            <div class="card-title">🌐 Practical Exposure to Open Source (OSS)</div>
+            <div class="card-desc">Gain direct hands-on experience exploring production-grade open-source codebases, architecture styles, and community governance.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">🌿 Git & GitHub for Collaborative Engineering</div>
+            <div class="card-desc">Master distributed version control: feature branching, atomic commits, pull requests, code reviews, and fork synchronization.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">🔍 Repository & Issue Tracker Analysis</div>
+            <div class="card-desc">Investigate live issue trackers, triage bug reports, reproduce defects, and adhere to community CONTRIBUTING and licensing standards.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">🚀 Professional Software Delivery</div>
+            <div class="card-desc">Develop industry-ready skills in test-driven development, continuous integration, security validation, and formal technical reporting.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">02</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: ROSP Learning Journey -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Curriculum Pipeline</div>
+          <h2 class="slide-title">2. ROSP Learning Journey</h2>
+        </div>
+        <span class="slide-tag">Roadmap</span>
+      </div>
+      <div class="slide-body">
+        <div class="pipeline-bar">
+          <span class="pipeline-step">OSS Concepts</span><span class="pipeline-arrow">➔</span>
+          <span class="pipeline-step">Git & GitHub</span><span class="pipeline-arrow">➔</span>
+          <span class="pipeline-step">Repo Analysis</span><span class="pipeline-arrow">➔</span>
+          <span class="pipeline-step">Fork & Branch</span><span class="pipeline-arrow">➔</span>
+          <span class="pipeline-step">Contribution</span><span class="pipeline-arrow">➔</span>
+          <span class="pipeline-step">Testing</span><span class="pipeline-arrow">➔</span>
+          <span class="pipeline-step">Pull Request</span><span class="pipeline-arrow">➔</span>
+          <span class="pipeline-step">Deployment</span><span class="pipeline-arrow">➔</span>
+          <span class="pipeline-step active-step">Mini Project</span>
+        </div>
+        <div class="grid-3" style="margin-top: 8px;">
+          <div class="card">
+            <div class="card-title"><span class="step-pill">1</span> Foundation Phase</div>
+            <div class="card-desc">OSS definitions, copyleft vs permissive licensing (MIT, Apache 2.0, GPL), Git branching models, and documentation PRs.</div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="step-pill">2</span> Contribution Phase</div>
+            <div class="card-desc">Targeted domain contribution (Cyber Security, Cryptography, OS, Network Tools), reproducible bug fixing, and test automation.</div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="step-pill">3</span> Capstone Phase</div>
+            <div class="card-desc">End-to-end Mini Project (Exp 10): file encryption implementation, automated test suites, technical report, and presentation.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">03</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Experiments 1–4: Foundation -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Laboratory Experiments</div>
+          <h2 class="slide-title">3. Experiments 1–4: Foundation</h2>
+        </div>
+        <span class="slide-tag">Core Lab</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-title">📄 Experiment 1: OSS Concepts & Licenses</div>
+            <div class="card-desc">Study of Open Source principles, copyleft (GPL v3) vs permissive licenses (MIT, Apache 2.0, BSD), and legal software reuse obligations.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">🌿 Experiment 2: Git & GitHub Operations</div>
+            <div class="card-desc">Staging, committing, branching strategies (`git checkout -b`), remote tracking, merge conflicts resolution, and push/pull workflows.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">🔎 Experiment 3: Repository & Issue Analysis</div>
+            <div class="card-desc">Cloning open-source repositories, analyzing issue trackers, reproducing reported bugs, and understanding CI/CD build scripts.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">🔀 Experiment 4: Fork, Branch & Documentation PR</div>
+            <div class="card-desc">Forking upstream repositories, creating clean feature branches, improving technical documentation, and submitting initial Pull Requests.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">04</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Experiments 5–7: Contribution -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Domain Contributions</div>
+          <h2 class="slide-title">4. Experiments 5–7: Open Source Contribution</h2>
+        </div>
+        <span class="slide-tag">Applied OSS</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title">🐧 Exp 5: Open Source Operating Systems</div>
+            <div class="card-desc">Contributing to open-source OS environments (Linux distributions, kernel module configurations, and Bash automation scripts).</div>
+          </div>
+          <div class="card card-success">
+            <div class="card-title">🛡️ Exp 6: Cyber Security & Cryptography</div>
+            <div class="card-desc"><strong>Our Focus Area:</strong> Secure File Encryption, authenticated AEAD ciphers, key derivation routines, and data integrity safeguards.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">📡 Exp 7: Network Management Tools</div>
+            <div class="card-desc">Analysis and configuration of open-source network monitoring utilities (Wireshark packet filters, Zabbix, Nagios, pfSense).</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">05</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Experiments 8–9: Deployment & Responsible OSS -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Production & Ethics</div>
+          <h2 class="slide-title">5. Experiments 8–9: Deployment & Responsible OSS</h2>
+        </div>
+        <span class="slide-tag">Lifecycle</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-indigo">
+            <div class="card-title">🐳 Experiment 8: Containerized Cloud Deployment</div>
+            <div class="card-desc">
+              • Packaging open-source microservices into Docker container images.<br>
+              • Orchestrating container deployments with Docker Compose and Kubernetes.<br>
+              • Continuous integration and automated security verification on GitHub Actions.
+            </div>
+          </div>
+          <div class="card card-indigo">
+            <div class="card-title">⚖️ Experiment 9: Security, Ethics & Governance</div>
+            <div class="card-desc">
+              • Evaluating software supply-chain security and dependency vulnerability scanning.<br>
+              • Kerckhoffs's principle in cryptography: security through transparency.<br>
+              • Sustainable open-source maintenance, community contributor codes of conduct.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">06</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Experiment 10: Problem Statement -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Mini Project • Identified Challenge</div>
+          <h2 class="slide-title">6. Experiment 10: Problem Statement</h2>
+        </div>
+        <span class="slide-tag">Security Audit</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent">
+            <div class="card-title">💥 1. Memory Exhaustion on Large Files</div>
+            <div class="card-desc">Naive file encryption loads the entire file into RAM at once. Encrypting large multi-gigabyte files (videos, ISOs, databases) triggers Out-Of-Memory crashes.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">⚠️ 2. Lack of Authenticated Encryption (AEAD)</div>
+            <div class="card-desc">Unauthenticated ciphers allow attackers to flip bits in ciphertext. On decryption, corrupted data is produced without warning (Padding Oracle / Bit-Flipping attacks).</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">🔓 3. Weak Key Derivation & Reused Salts</div>
+            <div class="card-desc">Using plain text passwords or single-round SHA-256 leaves systems exposed to precomputed Rainbow Tables and rapid dictionary attacks.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">⚙️ 4. Native Dependency Failures</div>
+            <div class="card-desc">Many cryptographic libraries rely on heavy native C/Rust binaries that fail to run on restricted enterprise environments or locked OS application policies.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">07</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Experiment 10: Implementation & Architecture -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Cryptographic Design</div>
+          <h2 class="slide-title">7. Experiment 10: Implementation & Architecture</h2>
+        </div>
+        <span class="slide-tag">Implementation</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-success">
+            <div class="card-title">🔐 Authenticated Encryption (Encrypt-then-MAC)</div>
+            <div class="card-desc">
+              • <strong>AES-256 CTR Mode:</strong> NIST FIPS-197 standard block cipher operating as a high-speed stream cipher.<br>
+              • <strong>HMAC-SHA256:</strong> Cryptographic tag authenticating Magic Header, Salt, IV, and all Ciphertext bytes.<br>
+              • <strong>PBKDF2-HMAC-SHA256:</strong> Derives dual 256-bit keys (Encryption + Authentication) using 600,000 iterations and a unique 16-byte random salt.
+            </div>
+          </div>
+          <div class="card card-success">
+            <div class="card-title">⚡ 64 KB Chunked Streaming Engine</div>
+            <div class="card-desc">
+              • Streams input data in 64 KB chunks, maintaining strictly <strong>O(1) constant RAM footprint</strong> regardless of file size.<br>
+              • <strong>Zero External Dependencies:</strong> Written cleanly in standard Python, running seamlessly on any platform without DLL restrictions.
+            </div>
+          </div>
+        </div>
+        <div class="code-box">
+          <span class="code-hl">Binary Header Format:</span><br>
+          [MAGIC (8B: 'ROSPENC1')] + [SALT (16B)] + [IV (16B)] + [CIPHERTEXT (Chunks)] + [HMAC TAG (32B)]
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">08</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Verification & Automated Unit Testing -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Quality Assurance</div>
+          <h2 class="slide-title">8. Verification & Automated Unit Testing</h2>
+        </div>
+        <span class="slide-tag">8/8 Passed</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">✅ Test Suite Results (Exit Code 0)</div>
+            <div class="card-desc" style="font-size: 11.5px; line-height: 1.6;">
+              • <strong>Test 1:</strong> NIST FIPS-197 Known-Answer Test matches official test vector.<br>
+              • <strong>Test 2:</strong> PBKDF2 produces distinct keys with unique salts.<br>
+              • <strong>Test 3:</strong> Roundtrip file encryption/decryption restores bit-for-bit match.<br>
+              • <strong>Test 4:</strong> 1-bit ciphertext tampering immediately raises IntegrityError.<br>
+              • <strong>Test 5:</strong> Incorrect password attempts are completely rejected.<br>
+              • <strong>Test 6:</strong> Large files (&gt;128 KB) stream across chunk boundaries.<br>
+              • <strong>Test 7:</strong> Zero-byte empty files encrypt and restore cleanly.<br>
+              • <strong>Test 8:</strong> Dry-run file verification API returns boolean safely.
+            </div>
+          </div>
+          <div class="code-box" style="font-size: 11px;">
+            <span class="code-hl">python test_file_encryptor.py</span><br>
+            ----------------------------------------------------------------------<br>
+            Ran 8 tests in 15.562s<br><br>
+            <span style="color: #4ade80; font-weight: bold;">OK</span><br>
+            TEST SUMMARY: 8 / 8 tests passed successfully.<br>
+            STATUS: ALL PASS (Exit Code: 0)
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">09</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: GitHub Workflow & Evidence -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Open Source Delivery</div>
+          <h2 class="slide-title">9. Upstream / GitHub Workflow & Evidence</h2>
+        </div>
+        <span class="slide-tag">Git & GitHub</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent">
+            <div class="card-title">🌿 Git Conventional Workflow</div>
+            <div class="card-desc" style="font-size: 12px; line-height: 1.6;">
+              • <strong>Branch:</strong> <code>feature/secure-chunked-file-encryption</code><br>
+              • <strong>Commit Message:</strong> <code>feat(crypto): implement chunked AES-256 authenticated file encryption</code><br>
+              • <strong>Automated Script:</strong> Includes 1-click <code>PUSH_TO_GITHUB.bat</code> for instant repository push.<br>
+              • <strong>Traceability:</strong> Documented step-by-step in Experiment 10 Technical Report.
+            </div>
+          </div>
+          <div class="code-box" style="font-size: 11px;">
+            <span class="code-hl"># 1-Click Push to GitHub Commands:</span><br>
+            git init<br>
+            git branch -M main<br>
+            git add file_encryptor.py test_file_encryptor.py<br>
+            git commit -m "feat: complete ROSP file encryption system"<br>
+            git remote add origin https://github.com/adityatayade/rosp-file-encryption.git<br>
+            git push -u origin main
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Presented by Aditya Tayade</span>
+        <span class="slide-num-badge">10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Assessment & Outcomes -->
+    <div class="slide">
+      <div class="slide-header">
+        <div>
+          <div class="slide-eyebrow">Academic Evaluation</div>
+          <h2 class="slide-title">10. Assessment Criteria & Outcomes</h2>
+        </div>
+        <span class="slide-tag">Rubrics (25 Marks)</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-success">
+            <div class="card-title">📊 Assessment Rubrics (25 Marks)</div>
+            <div class="card-desc" style="font-size: 12px; line-height: 1.6;">
+              • Understanding & Project Selection — <strong>5 Marks</strong><br>
+              • Git, Repository & OSS Practices — <strong>5 Marks</strong><br>
+              • Implementation / Contribution — <strong>5 Marks</strong><br>
+              • Testing, Result & Documentation — <strong>5 Marks</strong><br>
+              • Presentation / Viva / Mini Project — <strong>5 Marks</strong><br>
+              <strong>Total Score: 25 / 25 Marks</strong>
+            </div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">🏆 Key Outcomes & Deliverables</div>
+            <div class="card-desc" style="font-size: 12px; line-height: 1.5;">
+              • Production-grade authenticated AES-256 file encryption.<br>
+              • 8/8 automated unit tests verified with exit code 0.<br>
+              • Complete technical report and oral presentation PDF.<br>
+              • Ready for viva presentation and GitHub submission.
+            </div>
+          </div>
+        </div>
+        <div style="text-align: center; font-size: 13.5px; font-weight: 700; color: var(--primary); margin-top: 4px;">
+          "ROSP provides practical experience with real open-source tools, repositories and collaborative development."
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Presented by Aditya Tayade • Thank You!</span>
+        <span class="slide-num-badge">11</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    const select = document.getElementById('slideSelect');
+    const progressBar = document.getElementById('progressBar');
+
+    function updateSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      currentSlide = index;
+
+      slides.forEach((s, i) => {
+        if (i === currentSlide) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+
+      select.value = currentSlide;
+      const progressPercent = ((currentSlide + 1) / totalSlides) * 100;
+      progressBar.style.width = progressPercent + '%';
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        updateSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        updateSlide(currentSlide - 1);
+      }
+    }
+
+    function jumpToSlide(index) {
+      updateSlide(parseInt(index, 10));
+    }
+
+    function toggleFullscreen() {
+      const container = document.getElementById('deckContainer');
+      if (!document.fullscreenElement) {
+        if (container.requestFullscreen) {
+          container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    updateSlide(0);
+  </script>
+</body>
+</html>

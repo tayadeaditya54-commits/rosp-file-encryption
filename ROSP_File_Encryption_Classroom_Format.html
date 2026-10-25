@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recent Open Source Project Lab (ROSP) — Aditya Tayade</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text-black: #000000;
+      --text-dark: #1f2937;
+      --text-muted: #4b5563;
+      --text-footer: #374151;
+      --border: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f3f4f6;
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 10px;
+    }
+
+    /* Top Control Bar */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1050px;
+      margin-bottom: 16px;
+      padding: 10px 18px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+
+    .toolbar-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-black);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      color: #111827;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #e5e7eb;
+    }
+
+    .btn-primary {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: #0369a1;
+    }
+
+    .slide-counter {
+      font-size: 13px;
+      color: #374151;
+      font-weight: 700;
+      padding: 0 8px;
+    }
+
+    /* Presentation Slide Stage (Clean Classroom White Theme) */
+    .deck-container {
+      width: 100%;
+      max-width: 1050px;
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 44px 64px 34px 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease-in-out;
+      background: #ffffff;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 10;
+    }
+
+    .slide-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-black);
+      margin-bottom: 22px;
+      letter-spacing: -0.4px;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .bullet-list {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bullet-item {
+      font-size: 15.5px;
+      color: var(--text-dark);
+      line-height: 1.5;
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .bullet-item::before {
+      content: "•";
+      position: absolute;
+      left: 6px;
+      font-size: 20px;
+      color: var(--text-black);
+      line-height: 1;
+      top: 1px;
+    }
+
+    .sub-bullet-list {
+      list-style-type: none;
+      margin-top: 6px;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sub-bullet-item {
+      font-size: 14px;
+      color: var(--text-muted);
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .sub-bullet-item::before {
+      content: "–";
+      position: absolute;
+      left: 4px;
+      color: var(--text-muted);
+    }
+
+    .slide-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding-top: 10px;
+      font-size: 11px;
+      color: var(--text-footer);
+      font-family: Arial, sans-serif;
+    }
+
+    /* Title Slide Specifics */
+    .title-slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .main-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-black);
+      letter-spacing: -0.5px;
+    }
+
+    .main-subtitle {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-dark);
+    }
+
+    .main-meta {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    /* Print styles for saving exact PDF */
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+      }
+      .toolbar {
+        display: none !important;
+      }
+      .deck-container {
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        aspect-ratio: auto !important;
+        height: auto !important;
+        display: block !important;
+      }
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: relative !important;
+        page-break-after: always;
+        break-after: page;
+        height: 100vh !important;
+        width: 100vw !important;
+        border: none !important;
+        padding: 60px 80px 40px 80px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-title">
+      A. C. Patil College of Engineering • ROSP Lab Presentation (Aditya Tayade)
+    </div>
+    <div class="btn-group">
+      <button class="btn" onclick="prevSlide()" title="Previous slide (Left Arrow)">◀ Prev</button>
+      <span class="slide-counter" id="counter">01 / 11</span>
+      <button class="btn" onclick="nextSlide()" title="Next slide (Right Arrow)">Next ▶</button>
+      <button class="btn btn-primary" onclick="window.print()" title="Print or Save Presentation as PDF">🖨 Save PDF</button>
+    </div>
+  </div>
+
+  <!-- Slide Stage -->
+  <div class="deck-container">
+
+    <!-- SLIDE 1: Title Slide -->
+    <div class="slide active" id="slide-1">
+      <div class="title-slide-content">
+        <h1 class="main-title">Recent Open Source Project Lab (ROSP)</h1>
+        <div class="main-subtitle">Lab Work and Open Source Contribution</div>
+        <div class="main-meta">
+          Academic Year 2026–27<br>
+          Department of Information Technology<br>
+          A. C. Patil College of Engineering, Kharghar, Navi Mumbai<br><br>
+          <strong style="color: #000; font-size: 16px;">Aditya Tayade | Roll No. _____ | B.E. Information Technology</strong>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Introduction to ROSP -->
+    <div class="slide" id="slide-2">
+      <h2 class="slide-title">Introduction to ROSP</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item">Practical exposure to Open Source Software (OSS)</li>
+          <li class="bullet-item">Learn Git and GitHub for collaborative development</li>
+          <li class="bullet-item">Study real open-source repositories and issue trackers</li>
+          <li class="bullet-item">Work with branches, commits and Pull Requests</li>
+          <li class="bullet-item">Develop technical, documentation and teamwork skills</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: ROSP Learning Journey -->
+    <div class="slide" id="slide-3">
+      <h2 class="slide-title">ROSP Learning Journey</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item"><strong>OSS Concepts → Git & GitHub → Repository Analysis</strong></li>
+          <li class="bullet-item"><strong>Fork & Branch → Contribution → Testing</strong></li>
+          <li class="bullet-item"><strong>Pull Request → Deployment → Ethics & Security</strong></li>
+          <li class="bullet-item"><strong>Mini Project → Technical Report → Presentation</strong></li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Experiments 1–4: Foundation -->
+    <div class="slide" id="slide-4">
+      <h2 class="slide-title">Experiments 1–4: Foundation</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item"><strong>Experiment 1:</strong> OSS concepts and Open-Source Licenses</li>
+          <li class="bullet-item"><strong>Experiment 2:</strong> Git and GitHub operations</li>
+          <li class="bullet-item"><strong>Experiment 3:</strong> Open-source repository analysis, issues and documentation</li>
+          <li class="bullet-item"><strong>Experiment 4:</strong> Fork repository → create branch → modify documentation → submit Pull Request</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Experiments 5–7: Open Source Contribution -->
+    <div class="slide" id="slide-5">
+      <h2 class="slide-title">Experiments 5–7: Open Source Contribution</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item"><strong>Experiment 5:</strong> Contribute to an Open Source Operating System project</li>
+          <li class="bullet-item"><strong>Experiment 6:</strong> Contribute to AI/ML, IoT, Blockchain, Flutter, DevOps, Cloud or Cyber Security project (File Encryption)</li>
+          <li class="bullet-item"><strong>Experiment 7:</strong> Contribute to an Open Source Network Management Tool (Wireshark, Nagios, Zabbix, OpenNMS, pfSense)</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Experiments 8–9: Deployment & Responsible OSS -->
+    <div class="slide" id="slide-6">
+      <h2 class="slide-title">Experiments 8–9: Deployment & Responsible OSS</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item"><strong>Experiment 8:</strong> Deploy an Open Source Cloud/Application Service (Docker, Kubernetes, AWS/Azure/Google Cloud/OpenStack)</li>
+          <li class="bullet-item"><strong>Experiment 9:</strong> Analyze ethics, legal aspects, licensing and security; study sustainability and open-source community practices</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Experiment 10: Mini Project -->
+    <div class="slide" id="slide-7">
+      <h2 class="slide-title">Experiment 10: Mini Project (Core Methodology)</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item">Identify a real open-source problem or enhancement</li>
+          <li class="bullet-item">Analyze repository and select a security/cryptography issue</li>
+          <li class="bullet-item">Fork → Clone → Branch → Develop → Test</li>
+          <li class="bullet-item">Commit → Push → Pull Request → Review</li>
+          <li class="bullet-item">Prepare technical report and present the work</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 7</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Experiment 10: File Encryption Contribution Details -->
+    <div class="slide" id="slide-8">
+      <h2 class="slide-title">Experiment 10: File Encryption Details (Your Contribution)</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item"><strong>Target Domain:</strong> Open Source File Security & Cryptography</li>
+          <li class="bullet-item"><strong>Identified Problem:</strong> Memory exhaustion during large file encryption and missing authenticated encryption (AEAD) leading to bit-flipping vulnerabilities</li>
+          <li class="bullet-item"><strong>Code Implementation:</strong> NIST FIPS-197 AES-256 CTR Mode stream cipher with 64 KB chunked streaming for constant O(1) memory overhead</li>
+          <li class="bullet-item"><strong>Security & Integrity:</strong> PBKDF2-HMAC-SHA256 key derivation with 600,000 iterations + 128-bit salt; Encrypt-then-MAC using HMAC-SHA256 for instant tamper detection</li>
+          <li class="bullet-item"><strong>GitHub Repository:</strong> https://github.com/adityatayade/rosp-file-encryption</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Weekly Progress Monitoring -->
+    <div class="slide" id="slide-9">
+      <h2 class="slide-title">Weekly Progress Monitoring</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item">14-week progress record maintained during lab sessions</li>
+          <li class="bullet-item">Record experiment number, date and work completed</li>
+          <li class="bullet-item">Maintain Git/Repository activity and Commit/PR evidence (AES-256 File Encryptor)</li>
+          <li class="bullet-item">Record result/outcome and problems faced</li>
+          <li class="bullet-item">Faculty verifies progress through remarks and signature</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Assessment – 25 Marks -->
+    <div class="slide" id="slide-10">
+      <h2 class="slide-title">Assessment – 25 Marks</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item">Understanding / Project Selection — <strong>5 Marks</strong></li>
+          <li class="bullet-item">Git, Repository & OSS Practices — <strong>5 Marks</strong></li>
+          <li class="bullet-item">Implementation / Contribution — <strong>5 Marks</strong></li>
+          <li class="bullet-item">Testing, Result & Documentation — <strong>5 Marks</strong></li>
+          <li class="bullet-item">Presentation / Viva / Mini Project — <strong>5 Marks</strong></li>
+          <li class="bullet-item" style="margin-top: 10px; font-size: 17px; font-weight: bold;">Total — 25 Marks</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Outcomes / Conclusion -->
+    <div class="slide" id="slide-11">
+      <h2 class="slide-title">Outcomes / Conclusion</h2>
+      <div class="content-area">
+        <ul class="bullet-list">
+          <li class="bullet-item">Understand the open-source ecosystem and licenses</li>
+          <li class="bullet-item">Use Git and GitHub confidently for version control</li>
+          <li class="bullet-item">Analyze repositories, issues, branches and commits</li>
+          <li class="bullet-item">Completed practical OSS contribution: <strong>Open Source File Encryption & Decryption System</strong></li>
+          <li class="bullet-item">Deploy open-source applications and understand ethics/security</li>
+          <li class="bullet-item">Collaborate, document and present project work professionally</li>
+          <li class="bullet-item" style="margin-top: 8px; font-style: italic; color: #0284c7;">ROSP provides practical experience with real open-source tools, repositories and collaborative development.</li>
+        </ul>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 11</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+    const counter = document.getElementById('counter');
+
+    function updateSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      currentSlide = index;
+
+      slides.forEach((s, i) => {
+        if (i === currentSlide) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+
+      counter.textContent = String(currentSlide + 1).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) updateSlide(currentSlide - 1);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+    });
+
+    updateSlide(0);
+  </script>
+</body>
+</html>

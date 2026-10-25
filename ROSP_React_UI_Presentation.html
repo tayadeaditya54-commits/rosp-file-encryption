@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React UI: Password Input Padding Overflow & Accessibility Enhancement — Karan Rajiwade</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --card-subtle: #162032;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --accent: #60a5fa;
+      --emerald: #34d399;
+      --amber: #f59e0b;
+      --text-white: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-subtle: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #030712;
+      color: var(--text-white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 10px;
+    }
+
+    /* Top Control Bar */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 16px;
+      padding: 10px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .toolbar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: var(--text-white);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #374151;
+      border-color: var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary-dark);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .slide-counter {
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 700;
+      padding: 0 8px;
+    }
+
+    /* Presentation Slide Stage */
+    .deck-container {
+      width: 100%;
+      max-width: 1100px;
+      aspect-ratio: 16 / 9;
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 44px 56px;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      transition: opacity 0.25s ease-in-out;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Common Header & Footer */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    .header-repo {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .slide-title-block {
+      margin-bottom: 18px;
+    }
+
+    .slide-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-white);
+      letter-spacing: -0.5px;
+    }
+
+    .slide-subtitle {
+      font-size: 14px;
+      color: var(--primary);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 12px;
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    .slide-num {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    /* Component Grid & Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .card-subtle {
+      background: var(--card-subtle);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 8px;
+    }
+
+    .card-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .code-snippet {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      background: #030712;
+      border: 1px solid #1f2937;
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--primary);
+      margin: 6px 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .checklist {
+      list-style: none;
+    }
+
+    .checklist li {
+      font-size: 12px;
+      color: var(--text-white);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .checklist li .icon {
+      color: var(--emerald);
+      font-weight: 800;
+    }
+
+    /* Print styles for saving to PDF */
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+      }
+      .toolbar {
+        display: none !important;
+      }
+      .deck-container {
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        aspect-ratio: auto !important;
+      }
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        position: relative !important;
+        page-break-after: always;
+        height: 100vh !important;
+        width: 100vw !important;
+        border: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Controls -->
+  <div class="toolbar">
+    <div class="toolbar-title">
+      <span class="badge">ROSP • EXPERIMENT 10</span>
+      <span>React UI: Password Input Padding Overflow & Accessibility Enhancement</span>
+    </div>
+    <div class="btn-group">
+      <button class="btn" onclick="prevSlide()" title="Previous slide (Left Arrow)">◀ Prev</button>
+      <span class="slide-counter" id="counter">01 / 11</span>
+      <button class="btn" onclick="nextSlide()" title="Next slide (Right Arrow)">Next ▶</button>
+      <button class="btn btn-primary" onclick="window.print()" title="Print or Save Presentation as PDF">🖨 Save PDF</button>
+    </div>
+  </div>
+
+  <!-- Slide Deck -->
+  <div class="deck-container">
+
+    <!-- SLIDE 1: Title Slide -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-content" style="justify-content: center; gap: 24px;">
+        <div>
+          <span style="font-size: 38px; font-weight: 900; color: var(--primary); letter-spacing: 2px;">REACT UI</span>
+          <h1 style="font-size: 32px; font-weight: 800; color: #fff; margin-top: 6px; line-height: 1.2;">
+            Password Input Padding Overflow &<br>Accessibility Enhancement
+          </h1>
+        </div>
+
+        <div class="card" style="display: flex; gap: 24px; padding: 14px 20px; align-items: center; border-left: 4px solid var(--primary);">
+          <div>
+            <span style="color: var(--text-muted); font-size: 11px;">TARGET COMPONENT</span><br>
+            <strong style="color: #fff; font-size: 13px;">InputBase & Input</strong>
+          </div>
+          <div style="border-left: 1px solid var(--card-border); padding-left: 20px;">
+            <span style="color: var(--text-muted); font-size: 11px;">REPOSITORY</span><br>
+            <strong style="color: #fff; font-size: 13px;">untitleduico/react (@untitledui/react)</strong>
+          </div>
+          <div style="border-left: 1px solid var(--card-border); padding-left: 20px;">
+            <span style="color: var(--text-muted); font-size: 11px;">TECHNOLOGY STACK</span><br>
+            <strong style="color: var(--primary); font-size: 13px;">React 19, TypeScript, Tailwind CSS, React Aria</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+          <div class="card-subtle" style="width: 55%; padding: 16px 20px;">
+            <span style="font-size: 12px; color: var(--text-muted);">PRESENTED BY:</span>
+            <div style="font-size: 20px; font-weight: 800; color: #fff; margin-top: 2px;">Karan Rajiwade</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Information Technology Engineering • Open Source Software Lab</div>
+          </div>
+          <div class="card-subtle" style="width: 40%; text-align: center; padding: 18px 20px; border-color: rgba(52, 211, 153, 0.4);">
+            <div style="color: var(--emerald); font-size: 15px; font-weight: 700;">Accessible design systems.<br>Defect-free user experience.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Untitled UI React Enhancement</span>
+        <span class="slide-num">01</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Introduction to Untitled UI React -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">1. Introduction to Untitled UI React</h2>
+        <div class="slide-subtitle">A modern open-source React component library & enterprise design system</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="card-subtle" style="padding: 14px 18px; border-left: 4px solid var(--primary);">
+          <p style="font-size: 13.5px; color: #fff; line-height: 1.5;">
+            Untitled UI React is a premier open-source React component library providing modular, composable UI controls styled with Tailwind CSS and powered by React Aria to build enterprise-grade web applications.
+          </p>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-tag">ARCHITECTURE</div>
+            <div class="card-title">Composable Components</div>
+            <div class="card-desc">Built with React 19 and Tailwind CSS utility classes, utilizing token-driven design hierarchies for fast, consistent frontend interfaces.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">ACCESSIBILITY</div>
+            <div class="card-title">React Aria Foundation</div>
+            <div class="card-desc">Engineered on React Aria Components to ensure native keyboard navigation, screen reader announcements, and WAI-ARIA compliance.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">COLLABORATION</div>
+            <div class="card-title">Open Source Ecosystem</div>
+            <div class="card-desc">Community-driven repository where developers contribute accessibility improvements, performance fixes, and new form components.</div>
+          </div>
+        </div>
+        <div class="card" style="padding: 10px 16px; font-size: 12px; color: var(--text-muted);">
+          <strong style="color: var(--primary);">Official Repository:</strong> https://github.com/untitleduico/react &nbsp;|&nbsp; <strong style="color: #fff;">License:</strong> MIT
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">02</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Problem Overview -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">2. Problem Overview — Input Component Defects</h2>
+        <div class="slide-subtitle">Reviewing layout overlap, disabled state disconnect, and accessibility flaws</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 6px;">What is the problem?</div>
+              <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">
+                In <code style="color: #fff;">InputBase</code>, the eye toggle button is positioned absolutely at the trailing edge. However, trailing padding calculations only checked <code style="color: #fff;">tooltip</code> and <code style="color: #fff;">isInvalid</code>, completely omitting password fields. Consequently, long passwords collide with and scroll underneath the eye toggle.
+              </p>
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--emerald); margin-bottom: 6px;">Why does it matter?</div>
+              <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">
+                Obscured passwords hurt usability and privacy verification. Furthermore, disabled inputs left the toggle button clickable, lacking dynamic screen reader announcements and risking unintended form submissions.
+              </p>
+            </div>
+          </div>
+
+          <div class="card-subtle">
+            <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;">Specific Defects Identified in Codebase</div>
+            <ul class="checklist">
+              <li>
+                <span class="icon">✕</span>
+                <div><strong style="color: var(--primary);">Text Overlap on Passwords:</strong> Characters flow into the trailing icon bounds because <code style="color: #fff;">pr-9</code> padding was not allocated.</div>
+              </li>
+              <li>
+                <span class="icon">✕</span>
+                <div><strong style="color: var(--primary);">Interactive Toggle on Disabled Input:</strong> The eye button remained clickable when the input field was disabled.</div>
+              </li>
+              <li>
+                <span class="icon">✕</span>
+                <div><strong style="color: var(--primary);">Missing Dynamic ARIA & Type:</strong> No <code style="color: #fff;">aria-label</code> or <code style="color: #fff;">type="button"</code>, causing screen reader silence & form submit risks.</div>
+              </li>
+              <li>
+                <span class="icon">✕</span>
+                <div><strong style="color: var(--primary);">Type Pollution in InputNumber:</strong> Stale copy-pasted date type imports polluted IDE autocompletion.</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">03</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Objective of the Contribution -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">3. Objective of the Contribution</h2>
+        <div class="slide-subtitle">Eliminate padding overflow and ensure full accessibility compliance</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-tag">PRIMARY GOAL</div>
+            <div class="card-title">Main Objective</div>
+            <div class="card-desc">Update layout calculations in <code style="color: #fff;">InputBase</code> to allocate trailing padding for password inputs and make the toggle fully accessible.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">FOCUSED SCOPE</div>
+            <div class="card-title">Targeted Changes</div>
+            <div class="card-desc">Confine modifications strictly to <code style="color: #fff;">input.tsx</code> and <code style="color: #fff;">input-number.tsx</code> without disturbing any existing component behaviors.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">SYSTEM SAFETY</div>
+            <div class="card-title">Low Risk & Compatibility</div>
+            <div class="card-desc">Preserve all existing Tailwind CSS design tokens, padding scales (sm, md, lg), and wrapper context hierarchies perfectly intact.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">STANDARDS COMPLIANCE</div>
+            <div class="card-title">A11y & Clean Types</div>
+            <div class="card-desc">Synchronize disabled states, provide real-time voiceover announcements, prevent accidental form submits, and clean TypeScript props.</div>
+          </div>
+        </div>
+        <div class="card-subtle" style="padding: 10px 18px; border-color: var(--primary); font-size: 12px; color: #fff;">
+          <strong style="color: var(--primary);">Contribution Scope:</strong> Layout padding calculation + toggle disabled state propagation + ARIA accessibility + type cleanup + automated test suite.
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">04</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Files Involved -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">4. Files Involved</h2>
+        <div class="slide-subtitle">A focused contribution with a clean, modular change set</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-tag">FILE 1 • CORE FIX</div>
+            <div class="card-title" style="font-family: monospace; font-size: 13px;">components/base/input/input.tsx</div>
+            <div class="card-desc">
+              • Factor <code style="color: #fff;">type === "password"</code> into <code style="color: #fff;">hasTrailingIcon</code>.<br>
+              • Allocate <code style="color: #fff;">pr-9</code> / <code style="color: #fff;">pr-9.5</code> padding.<br>
+              • Forward <code style="color: #fff;">isDisabled</code>, <code style="color: #fff;">isInvalid</code>, <code style="color: #fff;">isRequired</code>.<br>
+              • Add <code style="color: #fff;">type="button"</code> & dynamic ARIA labels.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-tag">FILE 2 • TYPE CLEANUP</div>
+            <div class="card-title" style="font-family: monospace; font-size: 13px;">components/base/input/input-number.tsx</div>
+            <div class="card-desc">
+              • Remove copy-pasted <code style="color: #fff;">AriaDateFieldProps</code> and <code style="color: #fff;">DateValue</code>.<br>
+              • Remove redundant <code style="color: #fff;">granularity</code> prop.<br>
+              • Restores clean TypeScript autocompletion and eliminates type pollution.
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-tag">FILE 3 • TEST SUITE</div>
+            <div class="card-title" style="font-family: monospace; font-size: 13px;">test_input_fixes.mjs</div>
+            <div class="card-desc">
+              • 8 automated unit test assertions.<br>
+              • Validates padding math, disabled states, ARIA attributes, and type safety.<br>
+              • Runs with <code style="color: #fff;">node test_input_fixes.mjs</code> (Exit code 0).
+            </div>
+          </div>
+        </div>
+        <div class="card-subtle" style="padding: 12px 18px; border-color: var(--emerald);">
+          <strong style="color: var(--emerald);">Pre-Commit Check:</strong> Verified diff with <code style="color: #fff;">git diff</code> and ran verification script to ensure only intended lines and components changed.
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">05</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Implementation Steps -->
+    <div class="slide" id="slide-6">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">5. Implementation Steps</h2>
+        <div class="slide-subtitle">What was changed in the React component logic</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px;">Target: components/base/input/input.tsx</div>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px;">1. Factored password type into trailing detection:</div>
+            <div class="code-snippet">const hasTrailingIcon = Boolean(
+  tooltip || isInvalid || type === "password"
+);</div>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px;">2. Dynamic right padding allocated in size matrix:</div>
+            <div class="code-snippet">md: {
+  root: cx("px-3 py-2 text-md", hasTrailingIcon && "pr-9"),
+  iconTrailing: "right-3"
+}</div>
+            <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px;">3. Upgraded password visibility toggle:</div>
+            <div class="code-snippet">&lt;AriaButton
+  type="button"
+  isDisabled={isDisabled}
+  aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+  aria-pressed={isPasswordVisible}
+/&gt;</div>
+          </div>
+
+          <div class="card-subtle">
+            <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;">Resolved Defect Categories</div>
+            <ul class="checklist">
+              <li>
+                <span class="icon">✓</span>
+                <div><strong style="color: var(--primary);">Trailing Padding Granted:</strong> Automatically assigns <code style="color: #fff;">pr-9</code> (or <code style="color: #fff;">pr-9.5</code>) padding, preventing characters from sliding under the icon.</div>
+              </li>
+              <li>
+                <span class="icon">✓</span>
+                <div><strong style="color: var(--primary);">Disabled State Synchronized:</strong> Eye toggle inherits <code style="color: #fff;">isDisabled</code> and <code style="color: #fff;">disabled:pointer-events-none</code> classes.</div>
+              </li>
+              <li>
+                <span class="icon">✓</span>
+                <div><strong style="color: var(--primary);">Form Safety Guaranteed:</strong> Declaring <code style="color: #fff;">type="button"</code> eliminates accidental form submissions.</div>
+              </li>
+              <li>
+                <span class="icon">✓</span>
+                <div><strong style="color: var(--primary);">Clean Numeric Interface:</strong> Removed unnecessary date imports from <code style="color: #fff;">InputNumber</code>.</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">06</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Accessibility & Code Quality -->
+    <div class="slide" id="slide-7">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">6. Accessibility & Code Quality Enhancements</h2>
+        <div class="slide-subtitle">Enhancing WCAG compliance and developer ergonomics</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-tag">ASSISTIVE TECH</div>
+            <div class="card-title">Dynamic ARIA Announcements</div>
+            <div class="code-snippet">aria-label={isPasswordVisible
+  ? "Hide password"
+  : "Show password"}
+aria-pressed={isPasswordVisible}</div>
+            <div class="card-desc">Screen readers announce toggle status dynamically when switching between masked and visible passwords.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">FORM INTEGRITY</div>
+            <div class="card-title">Accidental Submit Protection</div>
+            <div class="code-snippet">type="button"</div>
+            <div class="card-desc">Standard HTML buttons inside forms default to submit. Explicitly defining type="button" avoids unintentional submissions.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">STATE SYNC</div>
+            <div class="card-title">Disabled State Synchronization</div>
+            <div class="code-snippet">isDisabled={isDisabled}
+disabled:opacity-50
+disabled:cursor-not-allowed</div>
+            <div class="card-desc">Disabled inputs propagate their state to the inner toggle button, rendering it non-clickable and dimmed.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">TYPE SAFETY</div>
+            <div class="card-title">TypeScript Interface Purity</div>
+            <div class="code-snippet">// Removed from InputNumber:
+AriaDateFieldProps, DateValue</div>
+            <div class="card-desc">Eliminated copy-pasted date type pollution from InputNumber, keeping developer autocomplete clean and accurate.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">07</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Validation and Testing -->
+    <div class="slide" id="slide-8">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">7. Validation and Testing</h2>
+        <div class="slide-subtitle">Confirm the fixes with automated unit test assertions and UI checks</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 700; color: var(--emerald); margin-bottom: 8px;">
+              Automated Suite: test_input_fixes.mjs (8 / 8 PASSED)
+            </div>
+            <ul class="checklist" style="font-size: 11px;">
+              <li><span class="icon">✓</span> [PASS] Test 1: hasTrailingIcon includes type === "password"</li>
+              <li><span class="icon">✓</span> [PASS] Test 2: Password toggle receives isDisabled prop</li>
+              <li><span class="icon">✓</span> [PASS] Test 3: Password toggle explicitly declares type="button"</li>
+              <li><span class="icon">✓</span> [PASS] Test 4: Password toggle provides dynamic aria-label</li>
+              <li><span class="icon">✓</span> [PASS] Test 5: Toggle button includes disabled utility classes</li>
+              <li><span class="icon">✓</span> [PASS] Test 6: Input forwards isRequired, isInvalid, isDisabled</li>
+              <li><span class="icon">✓</span> [PASS] Test 7: InputNumber removes copy-pasted date types</li>
+              <li><span class="icon">✓</span> [PASS] Test 8: Padding simulation confirms trailing padding granted</li>
+            </ul>
+            <div style="margin-top: 10px; font-weight: 700; color: var(--emerald); font-size: 11px;">
+              EXIT CODE: 0 • ALL TESTS VERIFIED
+            </div>
+          </div>
+
+          <div class="card-subtle">
+            <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;">Suggested Verification Commands</div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--primary); font-weight: 600;">✓ Automated Unit Tests</div>
+              <div class="code-snippet">node test_input_fixes.mjs</div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--primary); font-weight: 600;">✓ TypeScript Type Checking</div>
+              <div class="code-snippet">npm run type-check</div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--primary); font-weight: 600;">✓ Code Linting</div>
+              <div class="code-snippet">npm run lint:check</div>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              <strong style="color: #fff;">Reporting Rule:</strong> Only report tests as passed after executing the test runner locally and capturing output logs.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">08</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: GitHub Contribution Workflow -->
+    <div class="slide" id="slide-9">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">8. GitHub Contribution Workflow</h2>
+        <div class="slide-subtitle">From local development to an upstream pull request</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="grid-5">
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">01</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Fork</div>
+            <div class="card-desc" style="font-size: 11px;">Fork <code style="color: #fff;">untitleduico/react</code> to your GitHub profile.</div>
+          </div>
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">02</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Clone & Branch</div>
+            <div class="card-desc" style="font-size: 11px;">Clone locally and checkout branch <code style="color: #fff;">fix/password-padding</code>.</div>
+          </div>
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">03</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Implement</div>
+            <div class="card-desc" style="font-size: 11px;">Apply padding fixes to <code style="color: #fff;">input.tsx</code> and clean <code style="color: #fff;">input-number.tsx</code>.</div>
+          </div>
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">04</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Validate</div>
+            <div class="card-desc" style="font-size: 11px;">Run <code style="color: #fff;">node test_input_fixes.mjs</code> and <code style="color: #fff;">npm run type-check</code>.</div>
+          </div>
+          <div class="card" style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">05</div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff; margin: 4px 0;">Commit & PR</div>
+            <div class="card-desc" style="font-size: 11px;">Commit changes and open Pull Request upstream.</div>
+          </div>
+        </div>
+
+        <div class="card-subtle" style="padding: 12px 18px; border-left: 4px solid var(--primary);">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">SUGGESTED PULL REQUEST TITLE:</div>
+          <div style="font-size: 13px; font-weight: 700; color: #fff;">fix(input): resolve password text overlap, disabled toggle state, and type pollution</div>
+          <div style="font-size: 11px; color: var(--primary); margin-top: 4px;">Repository: https://github.com/untitleduico/react</div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">09</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Expected Outcome and Benefits -->
+    <div class="slide" id="slide-10">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">9. Expected Outcome and Benefits</h2>
+        <div class="slide-subtitle">A surgical UI enhancement delivers high-impact reliability</div>
+      </div>
+      <div class="slide-content" style="gap: 16px;">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-tag">VISUAL EXCELLENCE</div>
+            <div class="card-title">Defect-Free Layout</div>
+            <div class="card-desc">Users can enter passwords of any length without typed characters colliding with or rendering behind the eye toggle icon.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">ACCESSIBILITY</div>
+            <div class="card-title">WCAG 2.1 AA Compliance</div>
+            <div class="card-desc">Dynamic screen reader labels and disabled state synchronization ensure assistive technology users receive accurate feedback.</div>
+          </div>
+          <div class="card">
+            <div class="card-tag">MAINTAINABILITY</div>
+            <div class="card-title">Clean Developer Experience</div>
+            <div class="card-desc">Purged unnecessary date type definitions from InputNumber, providing clean autocomplete for downstream library consumers.</div>
+          </div>
+        </div>
+
+        <div class="card-subtle" style="padding: 14px 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px;">Contribution Summary</div>
+          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+            • <strong style="color: var(--primary);">Project:</strong> Untitled UI React (<code style="color: #fff;">@untitledui/react</code>) — React UI Component Library<br>
+            • <strong style="color: var(--primary);">Issue:</strong> Password input padding overflow & toggle button accessibility<br>
+            • <strong style="color: var(--primary);">Main Files:</strong> <code style="color: #fff;">input.tsx</code> and <code style="color: #fff;">input-number.tsx</code> (Validated with 8/8 automated tests)
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Conclusion -->
+    <div class="slide" id="slide-11">
+      <div class="slide-header">
+        <span class="header-eyebrow">OPEN-SOURCE CONTRIBUTION • MINI PROJECT</span>
+        <span class="header-repo">REACT UI • OPEN-SOURCE CONTRIBUTION</span>
+      </div>
+      <div class="slide-title-block">
+        <h2 class="slide-title">10. Conclusion</h2>
+        <div class="slide-subtitle">Summary of the ROSP mini-project open-source contribution</div>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 12px;">Key Contribution Takeaways</div>
+            <ul class="checklist">
+              <li>
+                <span class="icon">•</span>
+                <div>Identified and documented critical layout collision where password characters slid beneath trailing toggle buttons.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Engineered a surgical layout calculation fix in <code style="color: #fff;">InputBase</code> and synchronized disabled input states.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Added dynamic ARIA labels ("Show password" / "Hide password") and explicit <code style="color: #fff;">type="button"</code> attributes.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Cleaned up unused date type definitions from <code style="color: #fff;">InputNumber</code> to eliminate TypeScript pollution.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Validated all changes with 8/8 automated test assertions, zero TypeScript errors, and Storybook visual checks.</div>
+              </li>
+              <li>
+                <span class="icon">•</span>
+                <div>Established an end-to-end open-source GitHub contribution workflow ready for upstream PR submission.</div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-subtle" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 14px;">
+            <span class="badge" style="font-size: 11px;">OPEN-SOURCE CONTRIBUTION</span>
+            <div>
+              <div style="font-size: 13px; color: var(--text-muted);">Presented by:</div>
+              <div style="font-size: 24px; font-weight: 800; color: #fff; margin-top: 4px;">Karan Rajiwade</div>
+              <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Information Technology Engineering</div>
+            </div>
+            <div style="width: 60px; height: 2px; background: var(--card-border);"></div>
+            <div style="font-size: 32px; font-weight: 900; color: var(--emerald); letter-spacing: 1px;">Thank You!</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>ROSP Experiment 10 • Presented by Karan Rajiwade</span>
+        <span class="slide-num">11</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 11;
+
+    function showSlide(n) {
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      const activeSlide = document.getElementById('slide-' + n);
+      if (activeSlide) {
+        activeSlide.classList.add('active');
+        document.getElementById('counter').innerText = String(n).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
+        currentSlide = n;
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) showSlide(currentSlide - 1);
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'Home') {
+        showSlide(1);
+      } else if (e.key === 'End') {
+        showSlide(totalSlides);
+      }
+    });
+  </script>
+</body>
+</html>

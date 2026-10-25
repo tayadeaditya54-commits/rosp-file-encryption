@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROSP Lab — React UI Issue Solving & Open Source Contribution (Karan Rajiwade)</title>
+  <style>
+    :root {
+      --bg-page: #f1f5f9;
+      --bg-slide: #ffffff;
+      --card-bg: #f8fafc;
+      --card-border: #e2e8f0;
+      --card-hover: #f1f5f9;
+      --text-main: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --primary-dark: #0369a1;
+      --accent: #6366f1;
+      --accent-light: #eef2ff;
+      --emerald: #059669;
+      --emerald-light: #d1fae5;
+      --amber: #d97706;
+      --amber-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px 12px 32px 12px;
+      user-select: none;
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1150px;
+      margin-bottom: 14px;
+      padding: 10px 18px;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid rgba(2, 132, 199, 0.2);
+    }
+
+    .controls-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      color: #ffffff;
+    }
+
+    .slide-select {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: #ffffff;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Presentation Slide Stage */
+    .deck-viewport {
+      width: 100%;
+      max-width: 1150px;
+      aspect-ratio: 16 / 9;
+      background: var(--bg-slide);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 35px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Progress Bar */
+    .progress-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: #f1f5f9;
+      z-index: 50;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Individual Slide */
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 44px 56px 28px 56px;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      transition: opacity 0.25s ease-in-out;
+      background: #ffffff;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1.5px solid #f1f5f9;
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eyebrow-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    .slide-heading {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+
+    .header-right {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    /* Slide Body Canvas */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1.5px solid #f1f5f9;
+      padding-top: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .slide-num-badge {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 2px 10px;
+      border-radius: 6px;
+    }
+
+    /* Card Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: #cbd5e1;
+      background: #ffffff;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-accent {
+      border-left: 4px solid var(--primary);
+    }
+
+    .card-success {
+      border-left: 4px solid var(--emerald);
+    }
+
+    .card-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .code-box {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      background: #0f172a;
+      color: #38bdf8;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-top: 6px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .list-checks {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .list-checks li {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.4;
+    }
+
+    .list-checks li .check {
+      color: var(--emerald);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* Title Slide Specifics */
+    .hero-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 20px;
+    }
+
+    .hero-tag {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--primary);
+      text-transform: uppercase;
+      background: var(--primary-light);
+      padding: 4px 14px;
+      border-radius: 9999px;
+      border: 1px solid rgba(2, 132, 199, 0.25);
+    }
+
+    .hero-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--text-main);
+      letter-spacing: -0.8px;
+      line-height: 1.25;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 500;
+      max-width: 750px;
+    }
+
+    .meta-box-row {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      max-width: 880px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .meta-box {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    .meta-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-val {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 2px;
+    }
+
+    /* Link pill */
+    .pr-link-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .pr-link-pill:hover {
+      background: #d1fae5;
+      transform: translateY(-1px);
+    }
+
+    /* Print Setup */
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+      }
+      .top-bar {
+        display: none !important;
+      }
+      .deck-viewport {
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        aspect-ratio: auto !important;
+      }
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        position: relative !important;
+        page-break-after: always;
+        height: 100vh !important;
+        width: 100vw !important;
+        border: none !important;
+        padding: 40px 50px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Interactive Top Control Bar -->
+  <div class="top-bar">
+    <div class="brand-title">
+      <span class="badge-pill">ROSP • EXPERIMENT 10</span>
+      <span>Recent Open Source Project Lab — Karan Rajiwade</span>
+    </div>
+    <div class="controls-group">
+      <button class="btn" onclick="prevSlide()" title="Previous slide (Left Arrow)">◀ Prev</button>
+      
+      <select class="slide-select" id="slideSelect" onchange="jumpToSlide(this.value)">
+        <option value="1">01. Title Cover</option>
+        <option value="2">02. Introduction to ROSP</option>
+        <option value="3">03. ROSP Learning Journey</option>
+        <option value="4">04. Experiments 1–4: Foundation</option>
+        <option value="5">05. Experiments 5–7: Contribution</option>
+        <option value="6">06. Experiments 8–9: Deployment</option>
+        <option value="7">07. Exp 10: Problem Statement</option>
+        <option value="8">08. Exp 10: Code Implementation</option>
+        <option value="9">09. Exp 10: Unit Tests & Results</option>
+        <option value="10">10. Upstream PR #228 Evidence</option>
+        <option value="11">11. Assessment & Conclusion</option>
+      </select>
+
+      <button class="btn" onclick="nextSlide()" title="Next slide (Right Arrow)">Next ▶</button>
+      <button class="btn btn-primary" onclick="window.print()" title="Print or Save Presentation as PDF">🖨 Save PDF</button>
+    </div>
+  </div>
+
+  <!-- Interactive Slide Stage -->
+  <div class="deck-viewport" id="deckStage">
+
+    <!-- Progress Indicator -->
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width: 9.09%;"></div>
+    </div>
+
+    <!-- SLIDE 1: Title Cover -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-header" style="border: none; margin-bottom: 0;">
+        <span class="eyebrow-tag">ACADEMIC YEAR 2026–27</span>
+        <span class="header-right">A. C. PATIL COLLEGE OF ENGINEERING</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="hero-container">
+          <div class="hero-tag">OPEN SOURCE SOFTWARE LAB (ROSP)</div>
+          <h1 class="hero-title">
+            Recent Open Source Project Lab<br>
+            <span style="color: var(--primary);">Lab Work & Open Source Contribution</span>
+          </h1>
+          <p class="hero-subtitle">
+            React UI: Password Input Padding Overflow & Accessibility Enhancement in Untitled UI React
+          </p>
+
+          <div class="meta-box-row">
+            <div class="meta-box">
+              <div class="meta-label">CANDIDATE NAME</div>
+              <div class="meta-val">Karan Rajiwade</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">DEPARTMENT / CLASS</div>
+              <div class="meta-val">B.E. Information Technology</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">INSTITUTION</div>
+              <div class="meta-val">A. C. Patil College of Engineering</div>
+            </div>
+            <div class="meta-box" style="border-color: #a7f3d0; background: #ecfdf5;">
+              <div class="meta-label" style="color: #065f46;">UPSTREAM PR STATUS</div>
+              <div class="meta-val" style="color: #047857;">PR #228 Submitted 🚀</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>ROSP | A.Y. 2026–27 • Department of Information Technology</span>
+        <span class="slide-num-badge">01</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Introduction to ROSP -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">FOUNDATIONAL CONCEPTS</span>
+          <h2 class="slide-heading">1. Introduction to ROSP</h2>
+        </div>
+        <span class="header-right">ROSP • OPEN SOURCE CONTRIBUTION</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-accent">
+            <div class="card-title">Practical OSS Exposure</div>
+            <div class="card-desc">Gaining direct hands-on experience with modern Open Source Software architectures, design systems, and developer tools.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">Collaborative Git & GitHub</div>
+            <div class="card-desc">Mastering branching models, commit conventions, code reviews, and remote upstream fork synchronization workflows.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">Issue Trackers & Audits</div>
+            <div class="card-desc">Inspecting production repositories, identifying functional/UI defects, and verifying repository issue boards and guidelines.</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="card">
+            <div class="card-title">Real-World Code Quality</div>
+            <div class="card-desc">Working directly inside production codebases with TypeScript, automated unit test suites, and strict CI/CD formatting rules.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Technical Documentation</div>
+            <div class="card-desc">Drafting formal technical reports, changelogs, reproduction steps, and professional Pull Request proposals.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">02</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: ROSP Learning Journey -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">CURRICULUM ROADMAP</span>
+          <h2 class="slide-heading">2. ROSP Learning Journey</h2>
+        </div>
+        <span class="header-right">ROSP • OPEN SOURCE CONTRIBUTION</span>
+      </div>
+
+      <div class="slide-body" style="gap: 14px;">
+        <div class="grid-4">
+          <div class="card">
+            <div style="font-size: 11px; font-weight: 800; color: var(--primary);">PHASE 01 • FOUNDATION</div>
+            <div class="card-title" style="margin-top: 4px;">OSS Concepts & Licensing</div>
+            <div class="card-desc">MIT, Apache 2.0, GNU GPL licenses, Git operations, and repository structure analysis.</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 11px; font-weight: 800; color: var(--accent);">PHASE 02 • CONTRIBUTION</div>
+            <div class="card-title" style="margin-top: 4px;">Fork, Branch & Implementation</div>
+            <div class="card-desc">Selecting candidate repositories, isolating reproducible bugs, and developing token-compliant fixes.</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 11px; font-weight: 800; color: var(--amber);">PHASE 03 • DEPLOYMENT & ETHICS</div>
+            <div class="card-title" style="margin-top: 4px;">Containerization & Security</div>
+            <div class="card-desc">Deploying open-source services via Docker, evaluating security advisories, and ethical OSS practices.</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 11px; font-weight: 800; color: var(--emerald);">PHASE 04 • CAPSTONE</div>
+            <div class="card-title" style="margin-top: 4px;">Mini Project & Upstream PR</div>
+            <div class="card-desc">Executing full lifecycle contribution: live PR submission (#228), technical verification, and report.</div>
+          </div>
+        </div>
+
+        <div class="card card-accent" style="padding: 10px 18px; font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+          Pipeline: OSS Concepts → Git & GitHub → Repository Analysis → Fork & Branch → Contribution → Testing → Pull Request → Deployment → Ethics & Security → Mini Project
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">03</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Experiments 1–4 -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">LAB CURRICULUM</span>
+          <h2 class="slide-heading">3. Experiments 1–4: Foundation</h2>
+        </div>
+        <span class="header-right">ROSP • OPEN SOURCE CONTRIBUTION</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent">
+            <div class="card-title">Experiment 1: OSS Concepts & Licenses</div>
+            <div class="card-desc">Studied copyleft vs permissive open-source licenses (MIT, Apache, GPL), copyright compliance, and open governance models.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">Experiment 2: Git & GitHub Operations</div>
+            <div class="card-desc">Executed local initialization, staging, conventional commits, branch management, remote tracking, and merge conflict resolutions.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">Experiment 3: Repository Analysis & Issues</div>
+            <div class="card-desc">Inspected production repository layouts, issue trackers, contributor guides (CONTRIBUTING.md), and automated continuous integration workflows.</div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">Experiment 4: Documentation Contribution</div>
+            <div class="card-desc">Forked upstream repository, created feature branch, fixed documentation ambiguities, and submitted initial pull request for review.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">04</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Experiments 5–7 -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">LAB CURRICULUM</span>
+          <h2 class="slide-heading">4. Experiments 5–7: Open Source Contribution</h2>
+        </div>
+        <span class="header-right">ROSP • OPEN SOURCE CONTRIBUTION</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card">
+            <div style="font-size: 11px; font-weight: 800; color: var(--primary);">EXPERIMENT 5</div>
+            <div class="card-title">OS Project Contribution</div>
+            <div class="card-desc">Explored open-source operating system internals, Linux kernel modules, shell scripts, and system-level configuration workflows.</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 11px; font-weight: 800; color: var(--accent);">EXPERIMENT 6</div>
+            <div class="card-title">Advanced Domain OSS</div>
+            <div class="card-desc">Contributed to modern open-source stacks across React UI, Flutter cross-platform mobile, AI/ML models, DevOps, or cloud microservices.</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 11px; font-weight: 800; color: var(--emerald);">EXPERIMENT 7</div>
+            <div class="card-title">Network Management Tools</div>
+            <div class="card-desc">Evaluated open-source network monitoring and packet analysis utilities such as Wireshark, Nagios, Zabbix, OpenNMS, and pfSense.</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 14px; background: #ffffff;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">Practical Skills Developed:</div>
+          <div style="font-size: 12.5px; color: var(--text-secondary); margin-top: 4px;">
+            Cross-domain code comprehension, navigating large multi-package monorepos, adhering to ESLint/Prettier style guides, and diagnosing system logs.
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">05</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Experiments 8–9 -->
+    <div class="slide" id="slide-6">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">LAB CURRICULUM</span>
+          <h2 class="slide-heading">5. Experiments 8–9: Deployment & Responsible OSS</h2>
+        </div>
+        <span class="header-right">ROSP • OPEN SOURCE CONTRIBUTION</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent">
+            <div class="card-title">Experiment 8: Deploying Open Source Services</div>
+            <div class="card-desc">
+              • Configured Docker containerization for portable web and database workloads.<br>
+              • Explored orchestration using Kubernetes and container registries.<br>
+              • Deployed scalable services on cloud environments (AWS / Google Cloud / OpenStack).
+            </div>
+          </div>
+          <div class="card card-accent">
+            <div class="card-title">Experiment 9: Ethics, Security & Sustainability</div>
+            <div class="card-desc">
+              • Evaluated software supply chain security and dependency vulnerability audits.<br>
+              • Analyzed ethical implications of open-source licensing and contributor codes of conduct.<br>
+              • Studied long-term community maintainer sustainability and open governance.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">06</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Experiment 10: Problem Statement -->
+    <div class="slide" id="slide-7">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">MINI PROJECT • PROBLEM IDENTIFICATION</span>
+          <h2 class="slide-heading">6. Experiment 10: Mini Project Problem Statement</h2>
+        </div>
+        <span class="header-right">UNTITLEDUICO/REACT</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent">
+            <div class="card-title">Target: Untitled UI React (untitleduico/react)</div>
+            <div class="card-desc" style="line-height: 1.6;">
+              In <code style="color: var(--primary);">InputBase</code>, the eye toggle button is positioned absolutely at the trailing edge. However, trailing padding calculations only checked tooltips and validation error states, completely omitting password fields.
+              <br><br>
+              <strong>Impact:</strong> Long passwords visually collide with and slide beneath the eye toggle button, violating UI clarity and user privacy checks.
+            </div>
+          </div>
+
+          <div class="card" style="border-left: 4px solid var(--amber);">
+            <div class="card-title">Associated Accessibility (WCAG) Deficiencies</div>
+            <ul class="list-checks" style="margin-top: 6px;">
+              <li><span class="check">✕</span> <strong>Clickable while disabled:</strong> Toggle remained clickable when input was disabled.</li>
+              <li><span class="check">✕</span> <strong>Missing ARIA label:</strong> Lacked dynamic voiceover announcements for screen readers.</li>
+              <li><span class="check">✕</span> <strong>Unintended submit:</strong> Lacked explicit <code style="color: var(--primary);">type="button"</code> attribute.</li>
+              <li><span class="check">✕</span> <strong>Type pollution:</strong> <code style="color: var(--primary);">InputNumber</code> imported copy-pasted date types.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">07</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Implementation Details -->
+    <div class="slide" id="slide-8">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">MINI PROJECT • CODE IMPLEMENTATION</span>
+          <h2 class="slide-heading">7. Experiment 10: Implementation & Code Changes</h2>
+        </div>
+        <span class="header-right">COMPONENTS/BASE/INPUT/INPUT.TSX</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">1. Layout Padding Math Fix in InputBase</div>
+            <div class="code-box">// Factored type === "password" into detection:
+const hasTrailingIcon = Boolean(
+  tooltip || isInvalid || type === "password"
+);
+
+// Grants reserved trailing padding in size matrix:
+md: {
+  root: cx("px-3 py-2 text-md", hasTrailingIcon && "pr-9"),
+  iconTrailing: "right-3"
+}</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">2. Accessible Password Toggle Control</div>
+            <div class="code-box">&lt;AriaButton
+  type="button"
+  isDisabled={isDisabled}
+  aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+  aria-pressed={isPasswordVisible}
+  className="disabled:pointer-events-none disabled:opacity-50"
+&gt;
+  {isPasswordVisible ? &lt;EyeOff /&gt; : &lt;Eye /&gt;}
+&lt;/AriaButton&gt;</div>
+          </div>
+        </div>
+
+        <div class="card card-success" style="margin-top: 14px; padding: 10px 18px;">
+          <strong style="color: var(--emerald);">Type Cleanup:</strong> Purged unused <code style="color: var(--text-main);">AriaDateFieldProps</code>, <code style="color: var(--text-main);">DateValue</code>, and <code style="color: var(--text-main);">granularity</code> from <code style="color: var(--text-main);">input-number.tsx</code>, keeping TypeScript autocompletion clean.
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">08</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Unit Testing & Verification -->
+    <div class="slide" id="slide-9">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">MINI PROJECT • QUALITY ASSURANCE</span>
+          <h2 class="slide-heading">8. Verification & Automated Unit Testing</h2>
+        </div>
+        <span class="header-right">TEST_INPUT_FIXES.MJS (8 / 8 PASSED)</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-success">
+            <div class="card-title">Automated Verification Suite Results</div>
+            <ul class="list-checks" style="font-size: 11.5px;">
+              <li><span class="check">✓</span> [PASS] Test 1: hasTrailingIcon includes type === "password"</li>
+              <li><span class="check">✓</span> [PASS] Test 2: Toggle AriaButton receives isDisabled prop</li>
+              <li><span class="check">✓</span> [PASS] Test 3: Toggle explicitly declares type="button"</li>
+              <li><span class="check">✓</span> [PASS] Test 4: Toggle provides dynamic screen reader aria-label</li>
+              <li><span class="check">✓</span> [PASS] Test 5: Toggle includes disabled tailwind utility classes</li>
+              <li><span class="check">✓</span> [PASS] Test 6: Input forwards isRequired, isInvalid, isDisabled</li>
+              <li><span class="check">✓</span> [PASS] Test 7: InputNumber removes copy-pasted date type pollution</li>
+              <li><span class="check">✓</span> [PASS] Test 8: Padding simulation confirms pr-9 / pr-9.5 granted</li>
+            </ul>
+            <div style="margin-top: 8px; font-weight: 800; color: var(--emerald); font-size: 11.5px;">
+              STATUS: EXIT CODE 0 • ALL TESTS VERIFIED
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Verification Commands & Standards</div>
+            <div style="margin-bottom: 8px;">
+              <div style="font-size: 11.5px; font-weight: 700; color: var(--primary);">✓ Automated Unit Suite</div>
+              <div class="code-box">node test_input_fixes.mjs</div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="font-size: 11.5px; font-weight: 700; color: var(--primary);">✓ Whitespace & Diff Check</div>
+              <div class="code-box">git diff --check</div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-top: 8px;">
+              <strong>Formatting Verification:</strong> <code style="color: var(--text-main);">git diff --check</code> returned 0 trailing whitespace or tab indentation errors.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">09</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Upstream PR Evidence -->
+    <div class="slide" id="slide-10">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">MINI PROJECT • REAL OPEN SOURCE CONTRIBUTION</span>
+          <h2 class="slide-heading">9. Upstream Pull Request Evidence (PR #228)</h2>
+        </div>
+        <span class="header-right">LIVE ON GITHUB</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="card card-success" style="padding: 18px 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <span class="badge-pill" style="background: #d1fae5; color: #065f46; font-size: 12px;">OPEN SOURCE PR #228</span>
+              <h3 style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 6px;">
+                fix(input): resolve password text overlap, disabled toggle state, and type pollution
+              </h3>
+            </div>
+            <a href="https://github.com/untitleduico/react/pull/228" target="_blank" class="pr-link-pill">
+              🔗 View PR #228 on GitHub
+            </a>
+          </div>
+
+          <div class="grid-3" style="margin-top: 14px;">
+            <div class="card" style="background: #ffffff;">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-muted);">REPOSITORY</div>
+              <div style="font-size: 13.5px; font-weight: 700; color: var(--text-main);">untitleduico/react</div>
+            </div>
+            <div class="card" style="background: #ffffff;">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-muted);">AUTHOR / FORK</div>
+              <div style="font-size: 13.5px; font-weight: 700; color: var(--text-main);">Karan4504 (Karan Rajiwade)</div>
+            </div>
+            <div class="card" style="background: #ffffff;">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-muted);">COMMITS PUSHED</div>
+              <div style="font-size: 13.5px; font-weight: 700; color: var(--emerald);">fb9c459 & 1e39ea1 (Verified)</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;">
+            <strong>Contribution URL:</strong> <a href="https://github.com/untitleduico/react/pull/228" target="_blank" style="color: var(--primary);">https://github.com/untitleduico/react/pull/228</a><br>
+            <strong>Status:</strong> Successfully submitted upstream to <code style="color: var(--text-main);">untitleduico:main</code> from branch <code style="color: var(--text-main);">Karan4504:fix/password-input-text-overlap-and-accessibility</code>.
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Assessment & Conclusion -->
+    <div class="slide" id="slide-11">
+      <div class="slide-header">
+        <div class="header-left">
+          <span class="eyebrow-tag">SUMMARY & EVALUATION</span>
+          <h2 class="slide-heading">10. Assessment Criteria & Outcomes</h2>
+        </div>
+        <span class="header-right">A.Y. 2026–27 • 25 MARKS</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent">
+            <div class="card-title">Assessment Rubrics (25 Marks)</div>
+            <ul class="list-checks" style="font-size: 12.5px; margin-top: 8px;">
+              <li><span class="check">✓</span> <strong>Understanding / Project Selection:</strong> 5 Marks</li>
+              <li><span class="check">✓</span> <strong>Git, Repository & OSS Practices:</strong> 5 Marks</li>
+              <li><span class="check">✓</span> <strong>Implementation / Contribution:</strong> 5 Marks</li>
+              <li><span class="check">✓</span> <strong>Testing, Result & Documentation:</strong> 5 Marks</li>
+              <li><span class="check">✓</span> <strong>Presentation / Viva / Mini Project:</strong> 5 Marks</li>
+              <li><span class="check">★</span> <strong style="color: var(--text-main); font-size: 13.5px;">Total — 25 Marks</strong></li>
+            </ul>
+          </div>
+
+          <div class="card card-success">
+            <div class="card-title">Contribution Outcomes & Takeaways</div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin-top: 6px;">
+              • Mastered real-world open source collaboration, branching, and upstream Pull Requests.<br>
+              • Successfully resolved layout overlap and WCAG accessibility defects in production React components.<br>
+              • Validated 100% of test assertions and submitted live <strong>Pull Request #228</strong> to Untitled UI React.
+            </p>
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #cbd5e1; font-style: italic; font-size: 11.5px; color: var(--text-muted);">
+              "ROSP provides practical experience with real open-source tools, repositories and collaborative development."
+            </div>
+            <div style="margin-top: 10px; font-weight: 800; font-size: 14px; color: var(--text-main); text-align: right;">
+              Thank You! — Karan Rajiwade
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Recent Open Source Project Lab • Presented by Karan Rajiwade</span>
+        <span class="slide-num-badge">11</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 11;
+
+    function updateDeck(n) {
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      const activeSlide = document.getElementById('slide-' + n);
+      if (activeSlide) {
+        activeSlide.classList.add('active');
+        document.getElementById('slideSelect').value = n;
+        document.getElementById('progressFill').style.width = ((n / totalSlides) * 100) + '%';
+        currentSlide = n;
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) updateDeck(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) updateDeck(currentSlide - 1);
+    }
+
+    function jumpToSlide(val) {
+      updateDeck(parseInt(val, 10));
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'Home') {
+        updateDeck(1);
+      } else if (e.key === 'End') {
+        updateDeck(totalSlides);
+      } else if (e.key === 'f' || e.key === 'F') {
+        const stage = document.getElementById('deckStage');
+        if (!document.fullscreenElement) {
+          stage.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+  </script>
+</body>
+</html>
